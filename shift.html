@@ -884,7 +884,7 @@ h1, h2, h3, h4, h5, h6,
       <span class="lbl">Autofill shift rpm</span>
       <input type="number" id="afLo" value="1800" step="50" aria-label="Shift rpm at closed throttle">
       <span class="lbl" style="letter-spacing:.06em">to</span>
-      <input type="number" id="afHi" value="6000" step="50" aria-label="Shift rpm at wide open throttle">
+      <input type="number" id="afHi" value="6200" step="50" aria-label="Shift rpm at wide open throttle">
       <span class="lbl" style="letter-spacing:.06em">· drop</span>
       <input type="number" id="afHyst" value="6" step="1" aria-label="Downshift hysteresis in mph">
       <span class="lbl" style="letter-spacing:.06em">· floor</span>
@@ -1428,7 +1428,7 @@ function paintTire(all) {
    ============================================================ */
 function buildTables() {
   const lo    = +$("afLo").value    || 1800;
-  const hi    = +$("afHi").value    || 6000;
+  const hi    = +$("afHi").value    || S.redline;
   const hyst  = +$("afHyst").value  || 0;
   const floor = +$("afFloor").value || 0;
   const rows  = tpsAxis();
@@ -1864,7 +1864,7 @@ function ensureAuxRows() {
   const n = tpsAxis().length;
   if (!S.tccRow || S.tccRow.length !== n) { S.tccRow = tccCurve(); S.tccMph = S.tccRow[0]; }
   if (!S.gvRow  || S.gvRow.length  !== n) {
-    const lo = +$("afLo").value || 1800, hi = +$("afHi").value || 6000;
+    const lo = +$("afLo").value || 1800, hi = +$("afHi").value || S.redline;
     S.gvRow = tpsAxis().map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), topGvGear())));
   }
 }
@@ -2046,7 +2046,8 @@ function refreshCells() {
 
   $("status").classList.toggle("warn", msg.length > 0);
   $("statusText").textContent = msg.length ? msg.join(" ")
-    : "Every downshift sits below its matching upshift, and shift speeds climb cleanly through the gears.";
+    : "Every downshift sits below its matching upshift, and shift speeds climb cleanly through the gears. " +
+      "Changing the tire, final drive, redline, stall or slip rebuilds these numbers from the autofill band.";
 
   renderDetail();
   refreshWot();
@@ -2765,6 +2766,24 @@ function flash(btn, msg) {
    ============================================================ */
 const recalc = () => { renderTopSpeeds(); renderTcc(); renderGv(); writeInputs(); refreshCells(); };
 
+/* ⭐ Anything that changes what a stored mph MEANS - final drive, tire, redline, slip - has to
+   put the numbers back on the autofill band, or the table quietly describes a car that no
+   longer exists. Brian asked for this to be automatic rather than a Build Table press.
+   ⚠️ It does regenerate every cell, so hand edits go. That is why it announces itself. */
+function rebuild(reason) {
+  buildTables();
+  renderTopSpeeds(); renderTcc(); renderGv();
+  renderTable();
+  if (reason) flash($("btnFill"), "Rebuilt");
+}
+
+/* Redline and the autofill top are the same number wearing two labels. */
+function syncRedline(v) {
+  S.redline = v;
+  $("redline").value = String(Math.round(v));
+  $("afHi").value    = String(Math.round(v));
+}
+
 /* Values land on Enter or when you leave the box — not on every keystroke,
    which on a phone means a half-typed "2" never gets treated as a number. */
 function onCommit(el, fn) {
@@ -2807,8 +2826,13 @@ function init() {
   renderTable();
 
   paintTire(true);
-  bindNum("fdr", "fdr");
-  bindNum("slip", "slip");
+  /* These five all change what the table's stored mph mean, so each one rebuilds it. */
+  ["fdr", "slip"].forEach(id => onCommit($(id), e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v)) S[id] = v;
+    e.target.value = S[id];
+    rebuild(true);
+  }));
   onCommit($("tccGap"), e => {
     const v = parseFloat(e.target.value);
     if (isFinite(v) && v >= 0) S.tccGap = v;
@@ -2822,26 +2846,37 @@ function init() {
     $("gvBody").style.display = S.gvOn ? "" : "none";
     renderGv(); renderTable();
   });
-  bindNum("redline", "redline");
+  onCommit($("redline"), e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v) && v > 0) syncRedline(v);
+    e.target.value = String(Math.round(S.redline));
+    rebuild(true);
+  });
+  onCommit($("afHi"), e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v) && v > 0) syncRedline(v);       // the other half of the same binding
+    e.target.value = String(Math.round(S.redline));
+    rebuild(true);
+  });
   onCommit($("stall"), e => {
     const v = parseFloat(e.target.value);
     const had = S.stall > 0;
     S.stall = isFinite(v) && v > 0 ? v : 0;
     e.target.value = S.stall ? String(S.stall) : "";
     if (had !== (S.stall > 0)) renderWot();   // the stall column comes and goes with it
-    recalc();
+    rebuild(true);
   });
 
   // Inches mode: diameter is the anchor, the metric size is solved. Metric mode: the reverse.
   onCommit($("tire"), e => {
     const v = parseFloat(e.target.value);
     if (isFinite(v) && v > 0) { S.tire = v; solveAspect(); }
-    paintTire(true); recalc();
+    paintTire(true); rebuild(true);
   });
 
   ["tw","ta","tr"].forEach(id => onCommit($(id), () => {
     if (readMetric()) solveDiameter();
-    paintTire(true); recalc();
+    paintTire(true); rebuild(true);
   }));
 
   ["dsLen","dsOD","dsWall"].forEach(id => bindNum(id, id));
