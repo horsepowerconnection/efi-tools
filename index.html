@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tuning Tools — The EFI Store</title>
+<meta name="description" content="Injector sizing, fuel pump selection and shift tables from The EFI Store.">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EFI Tools">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Assistant:wght@400;600;700&display=swap">
+<style>:root{--color-background:#050505;--color-foreground:#ffffff;--font-heading--family:Anton, sans-serif;--font-heading--style:normal;--font-heading--weight:400;--font-primary--family:Assistant, sans-serif;--font-primary--style:normal;--font-primary--weight:400;--page-margin:20px;--page-width:110rem;--partmash-black:#050505;--partmash-border:#2a2a2a;--partmash-dark:#151515;--partmash-dark-2:#1f1f1f;--partmash-red:#d40000;--partmash-red-bright:#ff1a1a;--partmash-red-dark:#990000;--partmash-silver:#c9c9c9;--partmash-silver-light:#e8e8e8;--partmash-white:#ffffff;--style-border-radius-inputs:4px;}</style>
+<style>/** Critical CSS for the theme. This file is included on every page. */
+
+/* Reset styles inspired by https://www.joshwcomeau.com/css/custom-css-reset/ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-height: 100svh;
+}
+
+html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {
+  overflow: hidden;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  border-radius: var(--style-border-radius-inputs);
+}
+
+select {
+  background-color: var(--color-background);
+  color: currentcolor;
+}
+
+dialog {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+p {
+  text-wrap: pretty;
+}
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+p:empty {
+  display: none;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):first-child,
+:empty:first-child + :where(p, h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 0;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):last-child,
+:where(p, h1, h2, h3, h4, h5, h6) + :has(+ :empty:last-child) {
+  margin-block-end: 0;
+}
+
+/** Theme styles below */
+body {
+  font-family: var(--font-primary--family);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/** Section layout utilities */
+
+/**
+ * Setup a grid that enables both full-width and constrained layouts
+ * depending on the class of the child elements.
+ *
+ * By default, a minimum content margin is set on the left and right
+ * sides of the section and the content is centered in the viewport to
+ * not exceed the maximum page width.
+ *
+ * When a child element is given the `full-width` class, it will span
+ * the entire viewport.
+ */
+.shopify-section {
+  --content-width: min(
+    calc(var(--page-width) - var(--page-margin) * 2),
+    calc(100% - var(--page-margin) * 2)
+  );
+  --content-margin: minmax(var(--page-margin), 1fr);
+  --content-grid: var(--content-margin) var(--content-width) var(--content-margin);
+
+  /* This is required to make <img> elements work as background images */
+  position: relative;
+  grid-template-columns: var(--content-grid);
+  display: grid;
+  width: 100%;
+}
+
+/* Child elements, by default, are constrained to the central column of the grid. */
+.shopify-section > * {
+  grid-column: 2;
+}
+
+/* Child elements that use the full-width utility class span the entire viewport. */
+.shopify-section > .full-width {
+  grid-column: 1 / -1;
+}
+
+/* PartMash / The EFI Store custom theme styles */
+
+:root {
+  --partmash-black: #050505;
+  --partmash-dark: #151515;
+  --partmash-dark-2: #1f1f1f;
+  --partmash-red: #d40000;
+  --partmash-red-bright: #ff1a1a;
+  --partmash-red-dark: #990000;
+  --partmash-silver: #c9c9c9;
+  --partmash-silver-light: #e8e8e8;
+  --partmash-white: #ffffff;
+  --partmash-border: #2a2a2a;
+}
+
+body {
+  background-color: var(--partmash-black);
+  color: var(--partmash-white);
+}
+
+a {
+  color: inherit;
+}
+
+/* Headings use the bold condensed display font, uppercase, tight tracking */
+h1, h2, h3, h4, h5, h6,
+.heading-font {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.75rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.95rem;
+  border-radius: 3px;
+  border: 2px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn--primary {
+  background-color: var(--partmash-red);
+  color: var(--partmash-white);
+  border-color: var(--partmash-red);
+}
+.btn--primary:hover {
+  background-color: var(--partmash-red-bright);
+  border-color: var(--partmash-red-bright);
+}
+.btn--outline {
+  background-color: transparent;
+  color: var(--partmash-white);
+  border-color: var(--partmash-white);
+}
+.btn--outline:hover {
+  background-color: var(--partmash-white);
+  color: var(--partmash-black);
+}
+
+/* ---------- Section heading with red tick mark ---------- */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 1.35rem;
+  margin: 0 0 1.25rem;
+}
+.section-heading::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 1.4rem;
+  background-color: var(--partmash-red);
+  border-radius: 1px;
+}
+
+/* ---------- Trust badge strips ---------- */
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+.trust-strip--band {
+  background-color: var(--partmash-red);
+  padding: 0.9rem var(--page-margin);
+}
+.trust-strip__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+}
+.trust-strip__item svg,
+.trust-strip__item .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+.trust-strip__item-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: block;
+}
+.trust-strip__item-subtitle {
+  opacity: 0.85;
+  font-size: 0.8rem;
+  display: block;
+}
+.trust-strip--band .trust-strip__item {
+  color: var(--partmash-white);
+}
+.trust-strip--footer .trust-strip__item {
+  color: var(--partmash-silver-light);
+}
+.trust-strip--footer {
+  padding: 2rem 0;
+  border-top: 1px solid var(--partmash-border);
+}
+
+/* ---------- Tile grid (brands / categories) ---------- */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
+}
+.tile {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  padding: 1.1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  min-height: 110px;
+}
+.tile:hover {
+  border-color: var(--partmash-red);
+  transform: translateY(-2px);
+}
+.tile__icon {
+  width: 100%;
+  max-width: 130px;
+  max-height: 3.5rem;
+  object-fit: contain;
+}
+.tile__label {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.tile--brand .tile__label {
+  color: var(--partmash-red-bright);
+}
+
+/* Category tiles: icon + label stacked */
+.tile--category {
+  min-height: 130px;
+  gap: 0.5rem;
+}
+.tile__icon-wrap {
+  width: 3.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--partmash-silver-light);
+  transition: color 0.15s ease;
+}
+.tile__icon-wrap svg {
+  width: 100%;
+  height: 100%;
+}
+.tile--category:hover .tile__icon-wrap {
+  color: var(--partmash-red-bright);
+}
+.tile--category .tile__label {
+  color: var(--partmash-white);
+  font-size: 0.72rem;
+}
+
+/* ---------- Product cards ---------- */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+.product-card {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease;
+}
+.product-card:hover {
+  border-color: var(--partmash-red);
+}
+.product-card__image {
+  background-color: var(--partmash-white);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.product-card__body {
+  padding: 0.85rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-grow: 1;
+}
+.product-card__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.product-card__part {
+  font-size: 0.75rem;
+  color: var(--partmash-silver);
+}
+.product-card__price {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  color: var(--partmash-white);
+  font-size: 1.05rem;
+  margin-top: auto;
+}
+.product-card__cta {
+  margin-top: 0.5rem;
+}
+.product-grid__empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--partmash-silver);
+  border: 1px dashed var(--partmash-border);
+  border-radius: 6px;
+  grid-column: 1 / -1;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  background-color: var(--partmash-dark);
+  min-height: 420px;
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 2.5rem var(--page-margin);
+  max-width: 640px;
+}
+.hero__title {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  margin: 0 0 0.75rem;
+}
+.hero__title .accent {
+  color: var(--partmash-red-bright);
+  display: block;
+}
+.hero__subtitle {
+  font-size: 1.05rem;
+  color: var(--partmash-silver-light);
+  margin: 0 0 1.5rem;
+  max-width: 480px;
+}
+.hero__ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Section spacing ---------- */
+.section-padded {
+  padding: 2.5rem 0;
+}
+</style>
+<style>
+.efihome{max-width:var(--page-width);margin-inline:auto;padding:2rem var(--page-margin) 1rem}
+.efihome h1{font-family:var(--font-heading--family);text-transform:uppercase;letter-spacing:.04em;
+  color:var(--partmash-white);margin:0 0 .5rem}
+.efihome__lede{color:var(--partmash-silver);max-width:56ch;margin:0 0 1.5rem;line-height:1.6}
+.efihome__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.efihome__card{display:block;padding:1.2rem;background:var(--partmash-dark);
+  border:1px solid var(--partmash-border);border-radius:6px;text-decoration:none;
+  transition:border-color .15s}
+.efihome__card:hover{border-color:var(--partmash-red)}
+.efihome__card h2{font-family:var(--font-heading--family);font-size:1.15rem;
+  text-transform:uppercase;color:var(--partmash-white);margin:0 0 .45rem;letter-spacing:.03em}
+.efihome__card p{color:var(--partmash-silver);font-size:.87rem;line-height:1.55;margin:0 0 .7rem}
+.efihome__card span{color:var(--partmash-red-bright);font-weight:700;font-size:.85rem}
+
+.efinav{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  padding:.6rem var(--page-margin);background:#0d0d0d;
+  border-bottom:2px solid var(--partmash-red);position:sticky;top:0;z-index:50}
+.efinav__home img{width:140px;height:auto;display:block}
+.efinav__links{display:flex;gap:.35rem;flex-wrap:wrap;flex:1 1 auto}
+.efinav__links a{color:var(--partmash-silver-light);text-decoration:none;font-size:.8rem;
+  font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:.45rem .7rem;
+  border:1px solid var(--partmash-border);border-radius:999px}
+.efinav__links a:hover{color:var(--partmash-red-bright);border-color:var(--partmash-red)}
+.efinav__call{color:var(--partmash-red-bright);font-weight:700;text-decoration:none;
+  font-size:1rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:600px){
+  .efinav{gap:.6rem;padding:.55rem 12px}
+  .efinav__home img{width:110px}
+  .efinav__links a{font-size:.75rem;padding:.5rem .6rem}
+}
+</style>
+<style>
+  .efitoolfoot {
+    background-color: #0d0d0d;
+    border-top: 2px solid var(--partmash-red);
+    margin-top: 2rem;
+  }
+  .efitoolfoot__inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: 2rem var(--page-margin) 2.25rem;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1.2fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .efitoolfoot__logo {
+    width: 210px;
+    height: auto;
+    display: block;
+    margin-bottom: .6rem;
+  }
+  .efitoolfoot__tag {
+    color: var(--partmash-silver-light);
+    font-size: .78rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin: 0 0 .6rem;
+  }
+  .efitoolfoot__blurb {
+    color: var(--partmash-silver);
+    font-size: .82rem;
+    line-height: 1.6;
+    margin: 0 0 .7rem;
+    max-width: 42ch;
+  }
+  .efitoolfoot__k {
+    color: var(--partmash-white);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin: 0 0 .55rem;
+  }
+  .efitoolfoot__phone {
+    display: block;
+    color: var(--partmash-red-bright);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: .5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .efitoolfoot__phone:hover { color: var(--partmash-white); }
+  .efitoolfoot__link {
+    display: block;
+    color: var(--partmash-silver-light);
+    font-size: .85rem;
+    text-decoration: none;
+    padding: .18rem 0;
+  }
+  .efitoolfoot__link:hover { color: var(--partmash-red-bright); }
+  .efitoolfoot__how {
+    border: 1px solid var(--partmash-border);
+    border-radius: 3px;
+    margin-bottom: .45rem;
+    background: #121212;
+  }
+  .efitoolfoot__how summary {
+    cursor: pointer;
+    padding: .5rem .7rem;
+    color: var(--partmash-silver-light);
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .efitoolfoot__how summary:hover { color: var(--partmash-white); }
+  .efitoolfoot__how ol {
+    margin: 0;
+    padding: 0 .7rem .7rem 1.9rem;
+    color: var(--partmash-silver);
+    font-size: .8rem;
+    line-height: 1.65;
+  }
+  .efitoolfoot__how b { color: var(--partmash-silver-light); }
+  .efitoolfoot__done {
+    color: #5FBF6A;
+    font-size: .85rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .efitoolfoot__inner { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 1.5rem; }
+    .efitoolfoot__logo { width: 180px; }
+    /* a phone number is for tapping, so give it a proper target */
+    .efitoolfoot__phone { font-size: 1.45rem; padding: .2rem 0; }
+    .efitoolfoot__link { padding: .45rem 0; }
+    .efitoolfoot__how summary { padding: .7rem; }
+  }
+</style>
+</head>
+<body>
+<nav class="efinav">
+  <a class="efinav__home" href="./index.html">
+    <img src="./assets/efi-store-logo.png" alt="The EFI Store" width="1130" height="290">
+  </a>
+  <div class="efinav__links">
+    <a href="./injector.html">Injectors</a>
+    <a href="./pump.html">Fuel Pump</a>
+    <a href="./shift.html">Shift Table</a>
+  </div>
+  <a class="efinav__call" href="tel:9287066112">928-706-6112</a>
+</nav>
+<div class="efihome">
+  <h1>Tuning Tools</h1>
+  <p class="efihome__lede">Plan the build before you buy. These work offline once you have opened
+     them, and they are the same tools that run on theefistore.com.</p>
+  <div class="efihome__grid"><a class="efihome__card" href="./injector.html"><h2>Injector Sizing Calculator</h2><p>Size injectors for your combination and add the right ones to the cart.</p><span>Open &rarr;</span></a><a class="efihome__card" href="./pump.html"><h2>Fuel Pump and Regulator Finder</h2><p>Work out the flow your combo needs, then see which pumps cover it.</p><span>Open &rarr;</span></a><a class="efihome__card" href="./shift.html"><h2>Shift Table Calculator</h2><p>Shift points across throttle, WOT table, driveshaft check and table export.</p><span>Open &rarr;</span></a></div>
+</div>
+<aside class="efitoolfoot full-width">
+  <div class="efitoolfoot__inner">
+
+    <div class="efitoolfoot__brand">
+      <img class="efitoolfoot__logo"
+           src="./assets/efi-store-logo.png"
+           alt="The EFI Store" width="1130" height="290" loading="lazy">
+      <p class="efitoolfoot__tag">Product &middot; Support &middot; Tuning</p>
+      <p class="efitoolfoot__blurb">
+        Built from real tuning experience. This is a planning tool &mdash; when you want it
+        dialed in on the dyno, that is what we do.
+      </p>
+    </div>
+
+    <div class="efitoolfoot__contact">
+      <p class="efitoolfoot__k">Talk to a tuner</p>
+      <a class="efitoolfoot__phone" href="tel:9287066112">928-706-6112</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/">theefistore.com</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/pages/get-an-appointment">Book a tuning session</a>
+      <a class="efitoolfoot__link" href="./index.html">More tools in the Tech Center</a>
+    </div>
+
+    <div class="efitoolfoot__install" id="EfiInstall">
+      <p class="efitoolfoot__k">Keep this on your phone</p>
+      <p class="efitoolfoot__blurb">
+        Save it to your home screen and it opens like an app &mdash; no app store, and it is
+        always the current version.
+      </p>
+      <details class="efitoolfoot__how">
+        <summary>iPhone &amp; iPad</summary>
+        <ol>
+          <li>Tap <b>Share</b> in Safari &mdash; the square with the arrow.</li>
+          <li>Scroll and tap <b>Add to Home Screen</b>.</li>
+          <li>Name it and tap <b>Add</b>.</li>
+        </ol>
+      </details>
+      <details class="efitoolfoot__how">
+        <summary>Android</summary>
+        <ol>
+          <li>Tap the <b>&#8942;</b> menu in Chrome.</li>
+          <li>Tap <b>Add to Home screen</b>.</li>
+        </ol>
+      </details>
+      <p class="efitoolfoot__done" id="EfiInstalled" hidden>
+        Running from your home screen. &#10003;
+      </p>
+    </div>
+
+  </div>
+</aside>
+
+<script>
+  (function () {
+    // already saved to the home screen? then the how-to is just noise
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                     || window.navigator.standalone === true;
+    if (!standalone) return;
+    var box = document.getElementById('EfiInstall');
+    var done = document.getElementById('EfiInstalled');
+    if (!box || !done) return;
+    box.querySelectorAll('.efitoolfoot__how, .efitoolfoot__blurb').forEach(function (el) { el.hidden = true; });
+    done.hidden = false;
+  })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js'); });
+}
+</script>
+<script>
+/* Standalone bridge - only the app build needs this, the store page never does.
+   ⛔ Catalog JSON carries STORE-RELATIVE urls ("/products/...") and the buy forms post to
+      "/cart/add". Off theefistore.com both 404, and the JSON is shipped verbatim so a
+      build-time rewrite would not catch the links the tools render from it. Handled at
+      click time instead, which also covers anything added to the catalogs later. */
+(function () {
+  var STORE = "https://www.theefistore.com";
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (!a) return;
+    var h = a.getAttribute("href");
+    if (!h || h.charAt(0) !== "/" || h.charAt(1) === "/") return;   /* "//host" is absolute */
+    e.preventDefault();
+    window.location.href = STORE + h;
+  }, true);
+  /* ⭐ TESTED, not assumed: a cross-origin POST to the store's own /cart/add adds the item
+     under the store's cookie and lands on /cart. The documented /cart/<id>:<qty> permalink
+     was tried first and rejected - it runs straight to checkout, and this store's checkout
+     bounces to a Shopify sign-in, so the customer meets a login instead of their cart. */
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f || f.getAttribute("action") !== "/cart/add") return;
+    e.preventDefault();
+    var g = document.createElement("form");
+    g.method = "post";
+    g.action = STORE + "/cart/add";
+    /* ⛔ NOT target="_blank" - a popup-blocked submit is a dead Add to Cart button with no
+       error. A same-tab submit always fires, and an out-of-scope navigation from a standalone
+       PWA opens the browser (Android custom tab / iOS Safari) with the app left intact. */
+    g.enctype = "multipart/form-data";
+    Array.prototype.forEach.call(f.querySelectorAll("[name]"), function (el) {
+      var i = document.createElement("input");
+      i.type = "hidden"; i.name = el.name; i.value = el.value;
+      g.appendChild(i);
+    });
+    document.body.appendChild(g);
+    g.submit();
+    g.parentNode.removeChild(g);
+  }, true);
+})();
+</script>
+</body>
+</html>

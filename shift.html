@@ -1,0 +1,2463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shift Table Calculator — The EFI Store</title>
+<meta name="description" content="Shift points across throttle, WOT table, driveshaft check and table export.">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EFI Tools">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Assistant:wght@400;600;700&display=swap">
+<style>:root{--color-background:#050505;--color-foreground:#ffffff;--font-heading--family:Anton, sans-serif;--font-heading--style:normal;--font-heading--weight:400;--font-primary--family:Assistant, sans-serif;--font-primary--style:normal;--font-primary--weight:400;--page-margin:20px;--page-width:110rem;--partmash-black:#050505;--partmash-border:#2a2a2a;--partmash-dark:#151515;--partmash-dark-2:#1f1f1f;--partmash-red:#d40000;--partmash-red-bright:#ff1a1a;--partmash-red-dark:#990000;--partmash-silver:#c9c9c9;--partmash-silver-light:#e8e8e8;--partmash-white:#ffffff;--style-border-radius-inputs:4px;}</style>
+<style>/** Critical CSS for the theme. This file is included on every page. */
+
+/* Reset styles inspired by https://www.joshwcomeau.com/css/custom-css-reset/ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-height: 100svh;
+}
+
+html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {
+  overflow: hidden;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  border-radius: var(--style-border-radius-inputs);
+}
+
+select {
+  background-color: var(--color-background);
+  color: currentcolor;
+}
+
+dialog {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+p {
+  text-wrap: pretty;
+}
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+p:empty {
+  display: none;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):first-child,
+:empty:first-child + :where(p, h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 0;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):last-child,
+:where(p, h1, h2, h3, h4, h5, h6) + :has(+ :empty:last-child) {
+  margin-block-end: 0;
+}
+
+/** Theme styles below */
+body {
+  font-family: var(--font-primary--family);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/** Section layout utilities */
+
+/**
+ * Setup a grid that enables both full-width and constrained layouts
+ * depending on the class of the child elements.
+ *
+ * By default, a minimum content margin is set on the left and right
+ * sides of the section and the content is centered in the viewport to
+ * not exceed the maximum page width.
+ *
+ * When a child element is given the `full-width` class, it will span
+ * the entire viewport.
+ */
+.shopify-section {
+  --content-width: min(
+    calc(var(--page-width) - var(--page-margin) * 2),
+    calc(100% - var(--page-margin) * 2)
+  );
+  --content-margin: minmax(var(--page-margin), 1fr);
+  --content-grid: var(--content-margin) var(--content-width) var(--content-margin);
+
+  /* This is required to make <img> elements work as background images */
+  position: relative;
+  grid-template-columns: var(--content-grid);
+  display: grid;
+  width: 100%;
+}
+
+/* Child elements, by default, are constrained to the central column of the grid. */
+.shopify-section > * {
+  grid-column: 2;
+}
+
+/* Child elements that use the full-width utility class span the entire viewport. */
+.shopify-section > .full-width {
+  grid-column: 1 / -1;
+}
+
+/* PartMash / The EFI Store custom theme styles */
+
+:root {
+  --partmash-black: #050505;
+  --partmash-dark: #151515;
+  --partmash-dark-2: #1f1f1f;
+  --partmash-red: #d40000;
+  --partmash-red-bright: #ff1a1a;
+  --partmash-red-dark: #990000;
+  --partmash-silver: #c9c9c9;
+  --partmash-silver-light: #e8e8e8;
+  --partmash-white: #ffffff;
+  --partmash-border: #2a2a2a;
+}
+
+body {
+  background-color: var(--partmash-black);
+  color: var(--partmash-white);
+}
+
+a {
+  color: inherit;
+}
+
+/* Headings use the bold condensed display font, uppercase, tight tracking */
+h1, h2, h3, h4, h5, h6,
+.heading-font {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.75rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.95rem;
+  border-radius: 3px;
+  border: 2px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn--primary {
+  background-color: var(--partmash-red);
+  color: var(--partmash-white);
+  border-color: var(--partmash-red);
+}
+.btn--primary:hover {
+  background-color: var(--partmash-red-bright);
+  border-color: var(--partmash-red-bright);
+}
+.btn--outline {
+  background-color: transparent;
+  color: var(--partmash-white);
+  border-color: var(--partmash-white);
+}
+.btn--outline:hover {
+  background-color: var(--partmash-white);
+  color: var(--partmash-black);
+}
+
+/* ---------- Section heading with red tick mark ---------- */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 1.35rem;
+  margin: 0 0 1.25rem;
+}
+.section-heading::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 1.4rem;
+  background-color: var(--partmash-red);
+  border-radius: 1px;
+}
+
+/* ---------- Trust badge strips ---------- */
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+.trust-strip--band {
+  background-color: var(--partmash-red);
+  padding: 0.9rem var(--page-margin);
+}
+.trust-strip__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+}
+.trust-strip__item svg,
+.trust-strip__item .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+.trust-strip__item-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: block;
+}
+.trust-strip__item-subtitle {
+  opacity: 0.85;
+  font-size: 0.8rem;
+  display: block;
+}
+.trust-strip--band .trust-strip__item {
+  color: var(--partmash-white);
+}
+.trust-strip--footer .trust-strip__item {
+  color: var(--partmash-silver-light);
+}
+.trust-strip--footer {
+  padding: 2rem 0;
+  border-top: 1px solid var(--partmash-border);
+}
+
+/* ---------- Tile grid (brands / categories) ---------- */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
+}
+.tile {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  padding: 1.1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  min-height: 110px;
+}
+.tile:hover {
+  border-color: var(--partmash-red);
+  transform: translateY(-2px);
+}
+.tile__icon {
+  width: 100%;
+  max-width: 130px;
+  max-height: 3.5rem;
+  object-fit: contain;
+}
+.tile__label {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.tile--brand .tile__label {
+  color: var(--partmash-red-bright);
+}
+
+/* Category tiles: icon + label stacked */
+.tile--category {
+  min-height: 130px;
+  gap: 0.5rem;
+}
+.tile__icon-wrap {
+  width: 3.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--partmash-silver-light);
+  transition: color 0.15s ease;
+}
+.tile__icon-wrap svg {
+  width: 100%;
+  height: 100%;
+}
+.tile--category:hover .tile__icon-wrap {
+  color: var(--partmash-red-bright);
+}
+.tile--category .tile__label {
+  color: var(--partmash-white);
+  font-size: 0.72rem;
+}
+
+/* ---------- Product cards ---------- */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+.product-card {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease;
+}
+.product-card:hover {
+  border-color: var(--partmash-red);
+}
+.product-card__image {
+  background-color: var(--partmash-white);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.product-card__body {
+  padding: 0.85rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-grow: 1;
+}
+.product-card__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.product-card__part {
+  font-size: 0.75rem;
+  color: var(--partmash-silver);
+}
+.product-card__price {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  color: var(--partmash-white);
+  font-size: 1.05rem;
+  margin-top: auto;
+}
+.product-card__cta {
+  margin-top: 0.5rem;
+}
+.product-grid__empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--partmash-silver);
+  border: 1px dashed var(--partmash-border);
+  border-radius: 6px;
+  grid-column: 1 / -1;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  background-color: var(--partmash-dark);
+  min-height: 420px;
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 2.5rem var(--page-margin);
+  max-width: 640px;
+}
+.hero__title {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  margin: 0 0 0.75rem;
+}
+.hero__title .accent {
+  color: var(--partmash-red-bright);
+  display: block;
+}
+.hero__subtitle {
+  font-size: 1.05rem;
+  color: var(--partmash-silver-light);
+  margin: 0 0 1.5rem;
+  max-width: 480px;
+}
+.hero__ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Section spacing ---------- */
+.section-padded {
+  padding: 2.5rem 0;
+}
+</style>
+<style>.shiftcalc{
+  --ground:#101215;
+  --panel:#181B20;
+  --panel-2:#1E2228;
+  --rule:#2A2F37;
+  --rule-soft:#22262c;
+  --ink:#E7E4DF;
+  --ink-dim:#A8AEB8;
+  --muted:#7E8794;
+  --dim:#5F6874;
+  --red:#D5262B;
+  --red-lit:#F2494E;
+  --blue:#4A90E2;
+  --amber:#F0A63C;
+  --green:#5FBF6A;
+  --on-heat:#0E1013;
+  --desc:#DCDDD9;
+  --font-display:var(--font-heading--family,"Barlow Condensed","Arial Narrow",sans-serif);
+  --font-body:var(--font-body--family,inherit);
+  --font-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}.shiftcalc *{box-sizing:border-box}.shiftcalc{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--font-body);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}.shiftcalc .wrap{max-width:1560px;margin:0 auto;padding:22px 20px 64px}/* ---------- masthead ---------- */
+.shiftcalc .masthead{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  border-bottom:2px solid var(--red);padding-bottom:12px;margin-bottom:18px;
+}.shiftcalc .masthead h1{
+  font-family:var(--font-display);font-size:clamp(30px,4.6vw,46px);
+  font-weight:700;letter-spacing:.055em;text-transform:uppercase;
+  margin:0;line-height:.98;text-wrap:balance;
+}.shiftcalc .masthead h1 em{font-style:normal;color:var(--red-lit)}.shiftcalc .masthead p{margin:0;color:var(--desc);font-size:13.5px;max-width:54ch}/* ---------- panels ---------- */
+.shiftcalc .panel{background:var(--panel);border:1px solid var(--rule);border-radius:3px;margin-bottom:16px}.shiftcalc .panel-hd{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--panel-2);
+}.shiftcalc .panel-hd h2{
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;margin:0;color:var(--ink-dim);
+}/* ---------- setup rail ---------- */
+.shiftcalc .rail-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule-soft)}.shiftcalc .field{background:var(--panel);padding:10px 13px 12px;display:flex;flex-direction:column;gap:5px}.shiftcalc .field label,.shiftcalc .lbl{
+  font-family:var(--font-display);font-size:11.5px;font-weight:600;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--desc);
+}.shiftcalc .field .hint{font-size:11px;color:var(--desc);font-family:var(--font-body);letter-spacing:0}.shiftcalc input[type=number],.shiftcalc input[type=text],.shiftcalc select{
+  width:100%;background:#0B0D10;border:1px solid var(--rule);border-radius:2px;
+  color:var(--ink);font-family:var(--font-mono);font-size:14.5px;font-weight:500;
+  padding:6px 8px;font-variant-numeric:tabular-nums;
+}.shiftcalc select{font-family:var(--font-body);font-size:14px}.shiftcalc input:focus,.shiftcalc select:focus,.shiftcalc button:focus-visible{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber)}.shiftcalc input[type=number]::-webkit-outer-spin-button,.shiftcalc input[type=number]::-webkit-inner-spin-button{opacity:.35}/* tire: enter it in inches or as a metric size, the other side keeps itself current */
+.shiftcalc .tirehd{display:flex;align-items:center;justify-content:space-between;gap:8px}.shiftcalc .tiregrid{display:grid;grid-template-columns:1.15fr 1fr .8fr .9fr;gap:5px}.shiftcalc .subf{display:flex;flex-direction:column;gap:2px;min-width:0}.shiftcalc .mini{
+  font-family:var(--font-display);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--desc);text-align:center;white-space:nowrap;
+}.shiftcalc .tiregrid input{padding:6px 3px;text-align:center;font-size:13.5px;min-width:0}/* a locked box and its label both stay dim — that is what reads as "not yours to type in" */
+.shiftcalc input.derived{background:#13171F;color:var(--muted);border-style:dashed;cursor:default}.shiftcalc .subf:has(input.derived) .mini{color:var(--muted)}.shiftcalc .seg.sm button{padding:4px 9px;font-size:11px;letter-spacing:.1em}.shiftcalc .duosel{display:grid;grid-template-columns:1.55fr 1fr;gap:5px}.shiftcalc .duosel select{min-width:0;text-overflow:ellipsis}.shiftcalc .dsgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.shiftcalc .dsgrid input,.shiftcalc .dsgrid select{padding:6px 3px;text-align:center;font-size:13.5px;min-width:0}.shiftcalc .strip{display:flex;gap:1px;background:var(--rule-soft);border-top:1px solid var(--rule);overflow-x:auto}.shiftcalc .cellbox{background:var(--panel);padding:8px 10px 9px;min-width:80px;flex:1 0 80px;display:flex;flex-direction:column;gap:3px}.shiftcalc .cellbox .gn{font-family:var(--font-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--desc);white-space:nowrap}.shiftcalc .cellbox input{padding:4px 5px;text-align:center;font-size:13.5px}.shiftcalc .cellbox .v{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums}.shiftcalc .cellbox .u{font-size:10.5px;color:var(--desc);font-family:var(--font-body);white-space:nowrap}/* ---------- control bars ---------- */
+.shiftcalc .toolbar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  padding:10px 14px;border-top:1px solid var(--rule);background:var(--panel-2);
+}.shiftcalc button{
+  font-family:var(--font-display);font-size:12.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;
+  background:#0B0D10;color:var(--ink-dim);border:1px solid var(--rule);border-radius:2px;
+  padding:7px 13px;cursor:pointer;transition:background .12s,color .12s,border-color .12s;
+}.shiftcalc button:hover{background:#22262d;color:var(--ink);border-color:#3C4350}.shiftcalc button.primary{background:var(--red);color:#fff;border-color:var(--red)}.shiftcalc button.primary:hover{background:var(--red-lit);border-color:var(--red-lit)}.shiftcalc .seg{display:inline-flex;border:1px solid var(--rule);border-radius:2px;overflow:hidden}.shiftcalc .seg button{border:0;border-radius:0;border-right:1px solid var(--rule)}.shiftcalc .seg button:last-child{border-right:0}.shiftcalc .seg button[aria-pressed=true]{background:var(--red);color:#fff}.shiftcalc .seg button[aria-pressed=true]:hover{background:var(--red-lit)}.shiftcalc .toolbar input[type=number]{width:78px}.shiftcalc .toolbar select{width:auto;min-width:104px}.shiftcalc .spacer{flex:1 1 auto}.shiftcalc .check{display:inline-flex;align-items:center;gap:6px;cursor:pointer}.shiftcalc .check input{width:15px;height:15px;accent-color:var(--red)}/* ---------- the numbers ---------- */
+.shiftcalc .tablewrap{overflow-x:auto}.shiftcalc table{border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums;width:100%}.shiftcalc thead th{
+  position:sticky;top:0;z-index:3;background:var(--panel-2);
+  font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--desc);
+  padding:7px 4px;border-bottom:1px solid var(--rule);white-space:nowrap;
+}.shiftcalc thead th.corner{
+  left:0;z-index:4;border-right:1px solid var(--rule);text-align:left;padding-left:12px;
+  font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+}.shiftcalc tbody th{
+  position:sticky;left:0;z-index:2;background:var(--panel-2);
+  font-family:var(--font-mono);font-size:12.5px;font-weight:500;color:var(--desc);
+  padding:0 12px;text-align:left;white-space:nowrap;
+  border-right:1px solid var(--rule);border-bottom:1px solid var(--rule-soft);
+}.shiftcalc tbody tr.up th{border-left:3px solid var(--red)}.shiftcalc tbody tr.down th{border-left:3px solid var(--blue)}.shiftcalc tbody tr.gap td,.shiftcalc tbody tr.gap th{height:7px;background:var(--ground);border:0;padding:0}.shiftcalc tbody td{
+  border-bottom:1px solid var(--rule-soft);border-right:1px solid var(--rule-soft);
+  padding:0;min-width:62px;
+}/* every cell carries the road speed over the engine rpm it lands on */
+.shiftcalc .duo{display:flex;flex-direction:column}.shiftcalc .duo input{
+  width:100%;background:transparent;border:0;border-radius:0;text-align:center;
+  font-family:var(--font-mono);color:var(--on-heat);padding:3px 2px;
+}.shiftcalc .duo .mph{font-size:13.5px;font-weight:700;padding-top:5px}.shiftcalc .duo .rpm{
+  font-size:10.5px;font-weight:500;color:rgba(14,16,19,.66);
+  border-top:1px solid rgba(14,16,19,.16);padding-bottom:5px;letter-spacing:-.02em;
+}.shiftcalc .duo input:hover{background:rgba(255,255,255,.22)}.shiftcalc .duo input:focus{outline:2px solid var(--on-heat);outline-offset:-2px;background:rgba(255,255,255,.3)}.shiftcalc tbody td.bad{box-shadow:inset 0 0 0 2px var(--red-lit)}.shiftcalc tbody td.understall{box-shadow:inset 0 0 0 2px var(--amber)}.shiftcalc #wotTbl td{min-width:0}.shiftcalc #wotTbl .we input{
+  width:100%;background:#0B0D10;border:1px solid var(--rule);border-radius:2px;
+  color:var(--ink);font-family:var(--font-mono);font-size:14px;font-weight:700;
+  text-align:center;padding:7px 6px;font-variant-numeric:tabular-nums;
+}.shiftcalc #wotTbl .we{padding:4px 5px}.shiftcalc #wotTbl .wv{
+  font-family:var(--font-mono);font-size:13.5px;color:var(--desc);
+  text-align:center;padding:0 12px;white-space:nowrap;
+}.shiftcalc #wotTbl .wv.hot{color:var(--red-lit);font-weight:700}.shiftcalc #wotTbl .wv.cold{color:var(--amber);font-weight:700}/* ---------- detail strip ---------- */
+.shiftcalc .detail{display:flex;flex-wrap:wrap;border-top:1px solid var(--rule);background:#0C0E11}.shiftcalc .dcell{padding:9px 16px;border-right:1px solid var(--rule-soft);min-width:116px}.shiftcalc .dcell .k{font-family:var(--font-display);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--desc)}.shiftcalc .dcell .v{font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}.shiftcalc .dcell.hi .v{color:var(--amber)}.shiftcalc .dcell.alert .v{color:var(--red-lit)}.shiftcalc .dcell.alert .k{color:var(--red-lit)}.shiftcalc .status{padding:9px 14px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--desc);display:flex;gap:9px;align-items:flex-start}.shiftcalc .status.warn{color:var(--amber)}.shiftcalc .status .dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-top:6px;flex:0 0 7px}.shiftcalc .status.warn .dot{background:var(--amber)}/* ---------- the graph, same window ---------- */
+.shiftcalc .graphbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:8px 14px;border-top:1px solid var(--rule);background:var(--panel-2);
+}.shiftcalc .graphbar h3{
+  font-family:var(--font-display);font-size:14px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;margin:0;color:var(--ink-dim);
+}.shiftcalc .graphbar .grp{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.shiftcalc .graphbox{position:relative;padding:12px 14px 2px;background:var(--panel)}.shiftcalc svg{display:block;width:100%;height:auto}.shiftcalc .readout{
+  position:absolute;pointer-events:none;background:rgba(11,13,16,.97);
+  border:1px solid var(--rule);border-radius:2px;padding:8px 10px;
+  font-family:var(--font-mono);font-size:11.5px;line-height:1.6;
+  white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5;
+}.shiftcalc .readout .rt{font-family:var(--font-display);letter-spacing:.13em;text-transform:uppercase;font-size:11px;color:var(--desc);margin-bottom:3px}.shiftcalc .readout .row{display:flex;gap:9px;align-items:center}.shiftcalc .readout .sw{width:10px;height:3px;flex:0 0 10px}.shiftcalc .readout .nm{color:var(--desc);width:44px}.shiftcalc .readout .vl{color:var(--ink);font-weight:700}.shiftcalc .legend{display:flex;flex-wrap:wrap;gap:6px 18px;padding:9px 14px 13px;border-top:1px solid var(--rule-soft)}.shiftcalc .lgi{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11.5px;color:var(--desc)}.shiftcalc .lgi .sw{width:18px;height:0;border-top-width:2.5px;border-top-style:solid}/* ---------- transfer ---------- */
+.shiftcalc .transfer-body{padding:12px 14px;display:grid;gap:10px}.shiftcalc textarea{
+  width:100%;min-height:100px;background:#0B0D10;border:1px solid var(--rule);border-radius:2px;
+  color:var(--ink);font-family:var(--font-mono);font-size:12.5px;padding:9px 10px;resize:vertical;
+}.shiftcalc textarea:focus{outline:2px solid var(--amber);outline-offset:1px}.shiftcalc .note{font-size:12.5px;color:var(--desc);max-width:82ch;margin:0}.shiftcalc .note b{color:var(--ink-dim);font-weight:600}.shiftcalc .formula{
+  padding:12px 14px;font-family:var(--font-mono);font-size:12.5px;color:var(--desc);
+  border:1px solid var(--rule-soft);border-radius:3px;background:#0C0E11;
+}.shiftcalc .formula b{color:var(--amber);font-weight:500}
+
+@media (prefers-reduced-motion:reduce){.shiftcalc *{transition:none!important}}
+
+/* ---------- phones and small tablets ----------
+   The grid is 16 columns wide and always will be, so it keeps its own
+   horizontal scroll with the shift labels pinned; everything around it stacks. */
+@media (max-width:760px){.shiftcalc .wrap{padding:14px 11px 44px}.shiftcalc .masthead{gap:8px;padding-bottom:10px;margin-bottom:13px}.shiftcalc .masthead p{font-size:12.5px}.shiftcalc .panel{margin-bottom:12px}.shiftcalc .panel-hd{padding:8px 11px}.shiftcalc .panel-hd h2{font-size:13.5px;letter-spacing:.12em}.shiftcalc .rail-body{grid-template-columns:1fr}.shiftcalc .wide{grid-column:auto}.shiftcalc .field{padding:10px 11px 12px}.shiftcalc .tiregrid{grid-template-columns:1fr 1fr}.shiftcalc .dsgrid{grid-template-columns:1fr 1fr}.shiftcalc .duosel{grid-template-columns:1fr;gap:8px}/* 16px keeps iOS from zooming the whole page when a box takes focus.
+     ⛔ `.dsgrid select` is (0,1,1) and beats a bare `select` at (0,0,1), so the driveshaft
+     material box has to be named here explicitly or it stays at 13.5px and zooms. */
+  .shiftcalc input[type=number],.shiftcalc input[type=text],.shiftcalc select,.shiftcalc textarea,.shiftcalc .tiregrid input,.shiftcalc .cellbox input,.shiftcalc .dsgrid input,.shiftcalc .dsgrid select{font-size:16px}/* ⛔ #wotTbl .we input is (1,1,1) — an id beats the type selectors above, so the WOT
+     boxes keep their 14px and iOS zooms on them unless they are named here as well. */
+  .shiftcalc #wotTbl .we input{font-size:16px}.shiftcalc .toolbar{gap:8px;padding:10px 11px}.shiftcalc .toolbar input[type=number]{width:72px}.shiftcalc .toolbar select{width:100%}.shiftcalc .toolbar .spacer{display:none}.shiftcalc .toolbar button{flex:1 1 auto}.shiftcalc .strip{overflow-x:auto;-webkit-overflow-scrolling:touch}.shiftcalc .tablewrap{-webkit-overflow-scrolling:touch}.shiftcalc tbody td{min-width:74px}.shiftcalc tbody th{font-size:12px;padding:0 9px}.shiftcalc thead th{font-size:12px}.shiftcalc thead th.corner{padding-left:9px;font-size:11px}/* match the base selectors' specificity or .duo .mph wins and iOS zooms */
+  .shiftcalc .duo .mph{font-size:16px;font-weight:700;padding:10px 2px 5px}.shiftcalc .duo .rpm{font-size:16px;font-weight:500;padding:5px 2px 10px}.shiftcalc .toolbar button,.shiftcalc .panel-hd button{padding:11px 15px}.shiftcalc .seg button{padding:11px 13px}.shiftcalc .seg.sm button{padding:11px 14px;font-size:12px}.shiftcalc .check input{width:20px;height:20px}.shiftcalc select{padding:9px 8px}.shiftcalc .tiregrid input,.shiftcalc .cellbox input{padding:9px 3px}.shiftcalc .detail{display:grid;grid-template-columns:1fr 1fr}.shiftcalc .dcell{min-width:0;padding:8px 12px;border-bottom:1px solid var(--rule-soft)}.shiftcalc .dcell .v{font-size:15px}.shiftcalc .graphbar{padding:8px 11px}.shiftcalc .graphbar .grp{width:100%;justify-content:space-between}.shiftcalc .graphbox{padding:8px 7px 2px}.shiftcalc .readout{font-size:11px;padding:6px 8px;line-height:1.5}.shiftcalc .readout .nm{width:38px}.shiftcalc .legend{padding:8px 11px 11px;gap:5px 13px}.shiftcalc .formula{font-size:11.5px;line-height:1.7}
+}
+
+
+/* ---------- fitting into the store page ---------- */
+.shiftcalc{background:var(--ground);}
+.shiftcalc .wrap{padding-top:0;}
+.shiftcalc__crumb{
+  color:var(--desc);font-size:.85rem;margin:0 0 .75rem;width:100%;
+  font-family:var(--font-body);letter-spacing:0;text-transform:none;
+}
+.shiftcalc__crumb a{color:var(--desc);text-decoration:none;}
+.shiftcalc__crumb a:hover{color:var(--red-lit);}
+.shiftcalc__crumb span{opacity:.55;margin:0 .35rem;}
+.shiftcalc .masthead{flex-direction:column;align-items:flex-start;}
+.shiftcalc .masthead p a{color:var(--red-lit);}
+
+.efinav{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  padding:.6rem var(--page-margin);background:#0d0d0d;
+  border-bottom:2px solid var(--partmash-red);position:sticky;top:0;z-index:50}
+.efinav__home img{width:140px;height:auto;display:block}
+.efinav__links{display:flex;gap:.35rem;flex-wrap:wrap;flex:1 1 auto}
+.efinav__links a{color:var(--partmash-silver-light);text-decoration:none;font-size:.8rem;
+  font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:.45rem .7rem;
+  border:1px solid var(--partmash-border);border-radius:999px}
+.efinav__links a:hover{color:var(--partmash-red-bright);border-color:var(--partmash-red)}
+.efinav__call{color:var(--partmash-red-bright);font-weight:700;text-decoration:none;
+  font-size:1rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:600px){
+  .efinav{gap:.6rem;padding:.55rem 12px}
+  .efinav__home img{width:110px}
+  .efinav__links a{font-size:.75rem;padding:.5rem .6rem}
+}
+</style>
+<style>
+  .efitoolfoot {
+    background-color: #0d0d0d;
+    border-top: 2px solid var(--partmash-red);
+    margin-top: 2rem;
+  }
+  .efitoolfoot__inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: 2rem var(--page-margin) 2.25rem;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1.2fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .efitoolfoot__logo {
+    width: 210px;
+    height: auto;
+    display: block;
+    margin-bottom: .6rem;
+  }
+  .efitoolfoot__tag {
+    color: var(--partmash-silver-light);
+    font-size: .78rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin: 0 0 .6rem;
+  }
+  .efitoolfoot__blurb {
+    color: var(--partmash-silver);
+    font-size: .82rem;
+    line-height: 1.6;
+    margin: 0 0 .7rem;
+    max-width: 42ch;
+  }
+  .efitoolfoot__k {
+    color: var(--partmash-white);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin: 0 0 .55rem;
+  }
+  .efitoolfoot__phone {
+    display: block;
+    color: var(--partmash-red-bright);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: .5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .efitoolfoot__phone:hover { color: var(--partmash-white); }
+  .efitoolfoot__link {
+    display: block;
+    color: var(--partmash-silver-light);
+    font-size: .85rem;
+    text-decoration: none;
+    padding: .18rem 0;
+  }
+  .efitoolfoot__link:hover { color: var(--partmash-red-bright); }
+  .efitoolfoot__how {
+    border: 1px solid var(--partmash-border);
+    border-radius: 3px;
+    margin-bottom: .45rem;
+    background: #121212;
+  }
+  .efitoolfoot__how summary {
+    cursor: pointer;
+    padding: .5rem .7rem;
+    color: var(--partmash-silver-light);
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .efitoolfoot__how summary:hover { color: var(--partmash-white); }
+  .efitoolfoot__how ol {
+    margin: 0;
+    padding: 0 .7rem .7rem 1.9rem;
+    color: var(--partmash-silver);
+    font-size: .8rem;
+    line-height: 1.65;
+  }
+  .efitoolfoot__how b { color: var(--partmash-silver-light); }
+  .efitoolfoot__done {
+    color: #5FBF6A;
+    font-size: .85rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .efitoolfoot__inner { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 1.5rem; }
+    .efitoolfoot__logo { width: 180px; }
+    /* a phone number is for tapping, so give it a proper target */
+    .efitoolfoot__phone { font-size: 1.45rem; padding: .2rem 0; }
+    .efitoolfoot__link { padding: .45rem 0; }
+    .efitoolfoot__how summary { padding: .7rem; }
+  }
+</style>
+</head>
+<body>
+<nav class="efinav">
+  <a class="efinav__home" href="./index.html">
+    <img src="./assets/efi-store-logo.png" alt="The EFI Store" width="1130" height="290">
+  </a>
+  <div class="efinav__links">
+    <a href="./injector.html">Injectors</a>
+    <a href="./pump.html">Fuel Pump</a>
+    <a href="./shift.html">Shift Table</a>
+  </div>
+  <a class="efinav__call" href="tel:9287066112">928-706-6112</a>
+</nav>
+<div class="shiftcalc"><div class="wrap">
+
+  <header class="masthead">
+    <p class="shiftcalc__crumb">
+      <a href="https://www.theefistore.com/">Home</a>
+      <span>/</span>
+      <a href="./index.html">Tech Center</a>
+      <span>/</span>
+      Shift Table Calculator
+    </p>
+    <h1>Shift <em>Table</em> Calculator</h1>
+    <p>Road speed over engine RPM in every cell, throttle across the top &mdash; the grid and the
+      curve in one window. Type into either number and the other follows.
+      This is a planning tool, not a tune &mdash;
+      <a href="https://www.theefistore.com/pages/get-an-appointment">book a session</a> or
+      <a href="tel:9287066112">call 928-706-6112</a> to get it dialed in.</p>
+  </header>
+
+  <!-- ============ SETUP ============ -->
+  <section class="panel">
+    <div class="panel-hd"><h2>Driveline Setup</h2></div>
+
+    <div class="rail-body">
+      <div class="field wide">
+        <div class="tirehd">
+          <span class="lbl">Tire Size</span>
+          <div class="seg sm" id="tireSeg">
+            <button data-tm="in" aria-pressed="true">Inches</button>
+            <button data-tm="metric" aria-pressed="false">Metric</button>
+          </div>
+        </div>
+        <div class="tiregrid">
+          <div class="subf"><span class="mini">Diameter in</span>
+            <input type="number" id="tire" value="28.5" step="0.1" min="15" max="60" aria-label="Tire diameter in inches"></div>
+          <div class="subf"><span class="mini">Width mm</span>
+            <input type="number" id="tw" value="275" step="5" min="100" max="500" aria-label="Section width in mm"></div>
+          <div class="subf"><span class="mini">Aspect</span>
+            <input type="number" id="ta" value="53.1" step="5" min="15" max="95" aria-label="Aspect ratio"></div>
+          <div class="subf"><span class="mini">Rim in</span>
+            <input type="number" id="tr" value="17" step="1" min="10" max="26" aria-label="Rim diameter in inches"></div>
+        </div>
+        <span class="hint" id="tireHint"></span>
+      </div>
+      <div class="field">
+        <label for="fdr">Final Drive</label>
+        <input type="number" id="fdr" value="3.73" step="0.01" min="1" max="8">
+        <span class="hint">ring &amp; pinion ratio</span>
+      </div>
+      <div class="field wide">
+        <div class="tirehd">
+          <label for="trans">Transmission</label>
+          <div class="seg sm" id="typeSeg">
+            <button data-tt="auto" aria-pressed="true">Auto</button>
+            <button data-tt="manual" aria-pressed="false">Manual</button>
+          </div>
+        </div>
+        <div class="duosel">
+          <div class="subf"><span class="mini">Model</span><select id="trans"></select></div>
+          <div class="subf"><span class="mini">Gear set</span><select id="gearset" aria-label="Gear set"></select></div>
+        </div>
+        <span class="hint" id="gearcount">4 forward gears</span>
+        <span class="hint" id="transNote" style="color:var(--amber)"></span>
+      </div>
+      <div class="field">
+        <label for="redline">Redline</label>
+        <input type="number" id="redline" value="6200" step="100" min="2000" max="12000">
+        <span class="hint">rpm — graph marker &amp; autofill top</span>
+      </div>
+      <div class="field" id="stallField">
+        <label for="stall">Stall Speed</label>
+        <input type="number" id="stall" placeholder="off" step="100" min="0" max="9000">
+        <span class="hint">rpm at WOT — flags shifts that land under it</span>
+      </div>
+      <div class="field">
+        <label for="slip" id="slipLabel">Converter Slip</label>
+        <input type="number" id="slip" value="0" step="1" min="0" max="35">
+        <span class="hint" id="slipHint">% — converter slip, raises engine rpm</span>
+      </div>
+    </div>
+
+    <div class="strip" id="ratios"></div>
+    <div class="strip" id="topspeeds"></div>
+
+    <div class="toolbar">
+      <span class="lbl">TPS Axis</span>
+      <select id="axisSel" aria-label="TPS breakpoint axis">
+        <option value="16">16 pt — Holley &amp; general use</option>
+        <option value="17">17 pt — HP Tuners exact</option>
+        <option value="11">11 pt — round numbers</option>
+      </select>
+
+      <label class="check" title="Shift tables hold whole mph, so an rpm you type lands on the nearest one the table can actually hit. Uncheck for exact rpm.">
+        <input type="checkbox" id="snap" checked>
+        <span class="lbl">Whole mph</span>
+      </label>
+
+      <span class="spacer"></span>
+
+      <span class="lbl">Autofill shift rpm</span>
+      <input type="number" id="afLo" value="1800" step="50" aria-label="Shift rpm at closed throttle">
+      <span class="lbl" style="letter-spacing:.06em">to</span>
+      <input type="number" id="afHi" value="6000" step="50" aria-label="Shift rpm at wide open throttle">
+      <span class="lbl" style="letter-spacing:.06em">· drop</span>
+      <input type="number" id="afHyst" value="6" step="1" aria-label="Downshift hysteresis in mph">
+      <span class="lbl" style="letter-spacing:.06em">· floor</span>
+      <input type="number" id="afFloor" value="10" step="1" aria-label="Minimum downshift speed in mph">
+      <button class="primary" id="btnFill">Build Table</button>
+    </div>
+  </section>
+
+  <!-- ============ NUMBERS + GRAPH, ONE WINDOW ============ -->
+  <section class="panel">
+    <div class="panel-hd">
+      <h2>Shift Speed vs. Throttle Position</h2>
+      <span class="lbl">every cell — <span style="color:var(--ink-dim)">mph</span> over <span style="color:var(--ink-dim)">rpm</span></span>
+    </div>
+
+    <div class="tablewrap"><table id="tbl"></table></div>
+    <div class="detail" id="detail"></div>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Table is consistent.</span></div>
+
+    <div class="graphbar">
+      <h3>Shift Curve</h3>
+      <div class="grp">
+        <span class="lbl">Plot</span>
+        <div class="seg" id="gySeg">
+          <button data-gy="MPH" aria-pressed="true">MPH</button>
+          <button data-gy="RPM" aria-pressed="false">RPM</button>
+        </div>
+        <span class="lbl">Highlight</span>
+        <select id="focusSel" aria-label="Highlight one shift pair"></select>
+        <div class="seg" id="showSeg">
+          <button data-show="both" aria-pressed="true">Both</button>
+          <button data-show="up" aria-pressed="false">Up</button>
+          <button data-show="down" aria-pressed="false">Down</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="graphbox">
+      <svg id="chart" viewBox="0 0 940 500" preserveAspectRatio="xMidYMid meet" role="img"
+           aria-label="Shift point curve: throttle position against road speed"></svg>
+      <div class="readout" id="readout"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <!-- ============ WOT SHIFT ============ -->
+  <section class="panel">
+    <div class="panel-hd">
+      <h2>WOT Shift</h2>
+      <div class="grp" style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+        <span class="lbl">Set every shift to</span>
+        <input type="number" id="wotAll" value="6000" step="100" min="1000" max="12000"
+               style="width:92px" aria-label="Shift rpm to apply to every gear">
+        <span class="lbl">rpm</span>
+        <button id="btnWotAll">Apply</button>
+        <button id="btnWotPush">Push To 100% Column</button>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="wotTbl"></table></div>
+    <div class="status" id="wotStatus"><span class="dot"></span><span id="wotStatusText"></span></div>
+  </section>
+
+  <!-- ============ TRANSFER ============ -->
+  <section class="panel">
+    <div class="panel-hd">
+      <h2>Move It In &amp; Out</h2>
+      <div class="grp" style="display:flex;gap:8px;align-items:center">
+        <span class="lbl">format</span>
+        <select id="tsvFmt" aria-label="Table format" style="width:auto;min-width:158px">
+          <option value="hpt">HP Tuners / Holley</option>
+          <option value="tl">TurboLamik 8HP</option>
+        </select>
+        <span id="tsvDropWrap" hidden>
+          <span class="lbl">downshift drop</span>
+          <input type="number" id="tsvDrop" value="800" step="50" min="0" max="6000"
+                 style="width:84px" aria-label="Downshift below the upshift">
+          <span class="seg sm" id="tsvDropSeg" style="display:inline-flex;vertical-align:middle">
+            <button type="button" data-dm="rpm" aria-pressed="true">rpm</button>
+            <button type="button" data-dm="pct" aria-pressed="false">%</button>
+          </span>
+        </span>
+        <span id="tsvMapWrap" hidden>
+          <span class="lbl">row</span>
+          <select id="tsvMap" aria-label="TurboLamik map row" style="width:auto;min-width:186px">
+            <option value="1">map 1 &mdash; auto comfort</option>
+            <option value="2">map 2 &mdash; auto sport</option>
+            <option value="3">map 3 &mdash; semi-manual comfort</option>
+            <option value="4">map 4 &mdash; semi-manual sport</option>
+            <option value="5">map 5 &mdash; semi-manual sport+</option>
+            <option value="6">map 6 &mdash; semi-manual drag</option>
+            <option value="7">map 7 &mdash; manual drift</option>
+            <option value="8">map 8 &mdash; dyno</option>
+            <option value="all">all 8 rows</option>
+          </select>
+        </span>
+        <span class="lbl">as</span>
+        <div class="seg" id="tsvSeg">
+          <button data-tu="MPH" aria-pressed="true">MPH</button>
+          <button data-tu="RPM" aria-pressed="false">RPM</button>
+        </div>
+        <button id="btnCopy">Copy Table</button>
+        <button id="btnPaste">Load Into Table</button>
+      </div>
+    </div>
+    <div class="transfer-body">
+      <textarea id="tsv" spellcheck="false" aria-label="Tab separated table values"></textarea>
+      <p class="note" id="tsvNote"></p>
+    </div>
+  </section>
+
+  <!-- ============ DRIVESHAFT ============ -->
+  <section class="panel">
+    <div class="panel-hd">
+      <h2>Driveshaft Critical Speed</h2>
+      <span class="lbl">the rpm the shaft starts to whip</span>
+    </div>
+
+    <div class="rail-body">
+      <div class="field wide">
+        <span class="lbl">Tube</span>
+        <div class="dsgrid">
+          <div class="subf"><span class="mini">Length in</span>
+            <input type="number" id="dsLen" value="52" step="0.5" min="10" max="96"
+                   aria-label="Driveshaft length between joint centers, inches"></div>
+          <div class="subf"><span class="mini">Tube OD in</span>
+            <input type="number" id="dsOD" value="3.5" step="0.125" min="1.5" max="8"
+                   aria-label="Tube outside diameter, inches"></div>
+          <div class="subf"><span class="mini">Wall in</span>
+            <input type="number" id="dsWall" value="0.083" step="0.005" min="0.028" max="0.5"
+                   aria-label="Tube wall thickness, inches"></div>
+          <div class="subf"><span class="mini">Material</span>
+            <select id="dsMat" aria-label="Tube material">
+              <option value="steel">Steel</option>
+              <option value="alum">Aluminum</option>
+              <option value="carbon">Carbon</option>
+            </select></div>
+        </div>
+        <span class="hint">Length is between the U-joint centers, not end to end. A two-piece shaft on a carrier bearing is two short shafts &mdash; measure one section.</span>
+      </div>
+    </div>
+
+    <div class="strip" id="dsOut"></div>
+    <div class="status" id="dsStatus"><span class="dot"></span><span id="dsStatusText"></span></div>
+  </section>
+
+  <div class="formula">
+    RPM = MPH &times; <b>336.135</b> &times; gear ratio &times; final drive &divide; tire diameter&nbsp;&nbsp;·&nbsp;&nbsp;MPH = RPM &times; tire diameter &divide; (336.135 &times; gear ratio &times; final drive)&nbsp;&nbsp;·&nbsp;&nbsp;converter or clutch slip divides engine rpm by (1 &minus; slip)
+  </div>
+
+</div></div>
+<aside class="efitoolfoot full-width">
+  <div class="efitoolfoot__inner">
+
+    <div class="efitoolfoot__brand">
+      <img class="efitoolfoot__logo"
+           src="./assets/efi-store-logo.png"
+           alt="The EFI Store" width="1130" height="290" loading="lazy">
+      <p class="efitoolfoot__tag">Product &middot; Support &middot; Tuning</p>
+      <p class="efitoolfoot__blurb">
+        Built from real tuning experience. This is a planning tool &mdash; when you want it
+        dialed in on the dyno, that is what we do.
+      </p>
+    </div>
+
+    <div class="efitoolfoot__contact">
+      <p class="efitoolfoot__k">Talk to a tuner</p>
+      <a class="efitoolfoot__phone" href="tel:9287066112">928-706-6112</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/">theefistore.com</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/pages/get-an-appointment">Book a tuning session</a>
+      <a class="efitoolfoot__link" href="./index.html">More tools in the Tech Center</a>
+    </div>
+
+    <div class="efitoolfoot__install" id="EfiInstall">
+      <p class="efitoolfoot__k">Keep this on your phone</p>
+      <p class="efitoolfoot__blurb">
+        Save it to your home screen and it opens like an app &mdash; no app store, and it is
+        always the current version.
+      </p>
+      <details class="efitoolfoot__how">
+        <summary>iPhone &amp; iPad</summary>
+        <ol>
+          <li>Tap <b>Share</b> in Safari &mdash; the square with the arrow.</li>
+          <li>Scroll and tap <b>Add to Home Screen</b>.</li>
+          <li>Name it and tap <b>Add</b>.</li>
+        </ol>
+      </details>
+      <details class="efitoolfoot__how">
+        <summary>Android</summary>
+        <ol>
+          <li>Tap the <b>&#8942;</b> menu in Chrome.</li>
+          <li>Tap <b>Add to Home screen</b>.</li>
+        </ol>
+      </details>
+      <p class="efitoolfoot__done" id="EfiInstalled" hidden>
+        Running from your home screen. &#10003;
+      </p>
+    </div>
+
+  </div>
+</aside>
+
+<script>
+  (function () {
+    // already saved to the home screen? then the how-to is just noise
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                     || window.navigator.standalone === true;
+    if (!standalone) return;
+    var box = document.getElementById('EfiInstall');
+    var done = document.getElementById('EfiInstalled');
+    if (!box || !done) return;
+    box.querySelectorAll('.efitoolfoot__how, .efitoolfoot__blurb').forEach(function (el) { el.hidden = true; });
+    done.hidden = false;
+  })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js'); });
+}
+</script>
+<script>
+/* Standalone bridge - only the app build needs this, the store page never does.
+   ⛔ Catalog JSON carries STORE-RELATIVE urls ("/products/...") and the buy forms post to
+      "/cart/add". Off theefistore.com both 404, and the JSON is shipped verbatim so a
+      build-time rewrite would not catch the links the tools render from it. Handled at
+      click time instead, which also covers anything added to the catalogs later. */
+(function () {
+  var STORE = "https://www.theefistore.com";
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (!a) return;
+    var h = a.getAttribute("href");
+    if (!h || h.charAt(0) !== "/" || h.charAt(1) === "/") return;   /* "//host" is absolute */
+    e.preventDefault();
+    window.location.href = STORE + h;
+  }, true);
+  /* ⭐ TESTED, not assumed: a cross-origin POST to the store's own /cart/add adds the item
+     under the store's cookie and lands on /cart. The documented /cart/<id>:<qty> permalink
+     was tried first and rejected - it runs straight to checkout, and this store's checkout
+     bounces to a Shopify sign-in, so the customer meets a login instead of their cart. */
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f || f.getAttribute("action") !== "/cart/add") return;
+    e.preventDefault();
+    var g = document.createElement("form");
+    g.method = "post";
+    g.action = STORE + "/cart/add";
+    /* ⛔ NOT target="_blank" - a popup-blocked submit is a dead Add to Cart button with no
+       error. A same-tab submit always fires, and an out-of-scope navigation from a standalone
+       PWA opens the browser (Android custom tab / iOS Safari) with the app left intact. */
+    g.enctype = "multipart/form-data";
+    Array.prototype.forEach.call(f.querySelectorAll("[name]"), function (el) {
+      var i = document.createElement("input");
+      i.type = "hidden"; i.name = el.name; i.value = el.value;
+      g.appendChild(i);
+    });
+    document.body.appendChild(g);
+    g.submit();
+    g.parentNode.removeChild(g);
+  }, true);
+})();
+</script><script>
+(function () {
+"use strict";
+
+
+/* ============================================================
+   Reference data
+   ============================================================ */
+const K = 336.135;                       // 63360 in/mile ÷ 60 min ÷ π
+
+const AUTOS = {
+  /* ---- GM ---- */
+  "PG":     { g: "GM", name: "Powerglide (2-speed)", ratios: [1.76, 1.00],
+              note: "Second is direct, so a gear set only changes first.",
+              sets: {
+                "Stock 1.76 (aluminum)": [1.76, 1.00],
+                "Stock 1.82 (cast iron)": [1.82, 1.00],
+                "1.69 straight cut":     [1.69, 1.00],
+                "1.80 straight cut":     [1.80, 1.00],
+                "1.98 straight cut":     [1.98, 1.00],
+                "2.10 straight cut":     [2.10, 1.00]
+              } },
+  "TH350":  { g: "GM", name: "TH350 / Turbo 350", ratios: [2.52, 1.52, 1.00],
+              note: "Stock ratios. Race gear sets change first — type yours into the ratio boxes." },
+  "TH400":  { g: "GM", name: "TH400 / Turbo 400", ratios: [2.48, 1.48, 1.00],
+              note: "Stock ratios. Race gear sets change first — type yours into the ratio boxes." },
+  "2004R":  { g: "GM", name: "200-4R / TH200-4R", ratios: [2.74, 1.57, 1.00, 0.67],
+              note: "Shifted by TV cable and governor — the cable setting drives line pressure as well as shift points." },
+  "700R4":  { g: "GM", name: "700R4 / 4L60", ratios: [3.059, 1.625, 1.000, 0.696],
+              note: "Same ratios as the 4L60E. GM renamed it 4L60 in 1990 — shifted by TV cable and governor, not electronically." },
+  "4L60E":  { g: "GM", name: "4L60E / 4L65E / 4L70E / 4L75E", ratios: [3.059, 1.625, 1.000, 0.696] },
+  "4L80E":  { g: "GM", name: "4L80E / 4L85E",  ratios: [2.482, 1.482, 1.000, 0.750] },
+  "6L80":   { g: "GM", name: "6L80 / 6L90",    ratios: [4.027, 2.364, 1.532, 1.152, 0.852, 0.667] },
+  "8L90":   { g: "GM", name: "8L80 / 8L90",    ratios: [4.56, 2.97, 2.08, 1.69, 1.27, 1.00, 0.85, 0.65] },
+  "10L90":  { g: "GM", name: "10L80 / 10L90",  ratios: [4.696, 2.985, 2.146, 1.769, 1.520, 1.275, 1.000, 0.854, 0.689, 0.636] },
+
+  /* ---- Ford ---- */
+  "C4":     { g: "Ford", name: "C4",             ratios: [2.46, 1.46, 1.00] },
+  "C6":     { g: "Ford", name: "C6",             ratios: [2.46, 1.46, 1.00] },
+  "AODE":   { g: "Ford", name: "AOD / AODE",     ratios: [2.40, 1.47, 1.00, 0.67] },
+  "4R70W":  { g: "Ford", name: "4R70W / 4R75W",  ratios: [2.84, 1.55, 1.00, 0.70] },
+  "E4OD":   { g: "Ford", name: "E4OD / 4R100",   ratios: [2.71, 1.54, 1.00, 0.71] },
+  "6R80":   { g: "Ford", name: "6R80",           ratios: [4.17, 2.34, 1.52, 1.14, 0.87, 0.69] },
+  "10R80":  { g: "Ford", name: "10R80",          ratios: [4.696, 2.985, 2.146, 1.769, 1.520, 1.275, 1.000, 0.854, 0.689, 0.636],
+              note: "Co-developed with the GM 10L80 — same ratios." },
+
+  /* ---- Mopar ---- */
+  "A904":   { g: "Mopar", name: "A904 TorqueFlite",            ratios: [2.45, 1.45, 1.00] },
+  "A727":   { g: "Mopar", name: "A727 TorqueFlite",            ratios: [2.45, 1.45, 1.00] },
+  "A518":   { g: "Mopar", name: "A518 / 46RH / 46RE",          ratios: [2.45, 1.45, 1.00, 0.69] },
+  "A618":   { g: "Mopar", name: "A618 / 47RH / 47RE / 48RE",   ratios: [2.45, 1.45, 1.00, 0.69] },
+  "42RLE":  { g: "Mopar", name: "42RLE",                       ratios: [2.84, 1.57, 1.00, 0.69] },
+  "545RFE": { g: "Mopar", name: "545RFE",                      ratios: [3.00, 1.67, 1.50, 1.00, 0.75],
+              note: "The 1.50 is second prime, used on kickdown rather than in a straight 1-2-3-4-5 pull. Check your calibration's upshift sequence." },
+  "68RFE":  { g: "Mopar", name: "68RFE",                       ratios: [3.23, 1.84, 1.41, 1.00, 0.82, 0.63] },
+
+  /* ---- ZF ---- */
+  "8HP":    { g: "ZF", name: "8HP70 / 8HP90", ratios: [4.714, 3.143, 2.106, 1.667, 1.285, 1.000, 0.839, 0.667] },
+
+  "CUSTOM": { g: "Custom", name: "Custom", ratios: [3.059, 1.625, 1.000, 0.696] }
+};
+
+const MANUALS = {
+  /* ---- Tremec: the swap boxes ---- */
+  "TKX":    { g: "Tremec", name: "TKX (5-speed)", ratios: [3.27, 1.98, 1.34, 1.00, 0.72],
+              sets: { "3.27 first / 0.72 OD": [3.27, 1.98, 1.34, 1.00, 0.72],
+                      "2.87 first / 0.68 OD": [2.87, 1.89, 1.28, 1.00, 0.68] } },
+  "TKO500": { g: "Tremec", name: "TKO 500 (5-speed)", ratios: [3.27, 1.98, 1.34, 1.00, 0.68] },
+  "TKO600": { g: "Tremec", name: "TKO 600 (5-speed)", ratios: [2.87, 1.89, 1.28, 1.00, 0.64] },
+  "MAGNUM": { g: "Tremec", name: "T-56 Magnum (6-speed)", ratios: [2.66, 1.78, 1.30, 1.00, 0.80, 0.63],
+              sets: { "2.66 first":              [2.66, 1.78, 1.30, 1.00, 0.80, 0.63],
+                      "2.97 first (Magnum XL)":  [2.97, 2.10, 1.46, 1.00, 0.75, 0.50] } },
+  "T5WC":   { g: "Tremec", name: "T5 World Class (5-speed)", ratios: [3.35, 1.99, 1.33, 1.00, 0.68],
+              sets: { "Ford V8 World Class": [3.35, 1.99, 1.33, 1.00, 0.68],
+                      "GM F-body V8":        [2.95, 1.94, 1.34, 1.00, 0.63] } },
+
+  /* ---- Tremec: factory fitments ---- */
+  "T56":    { g: "Tremec OEM", name: "T-56 (LS1 / OEM 6-speed)", ratios: [2.66, 1.78, 1.30, 1.00, 0.74, 0.50] },
+  "TR6060": { g: "Tremec OEM", name: "TR-6060 (6-speed)", ratios: [2.66, 1.78, 1.30, 1.00, 0.80, 0.63],
+              note: "Ratios vary by application — the ZR1 and GT500 sets differ. Check yours." },
+  "TR3650": { g: "Tremec OEM", name: "TR-3650 (5-speed)", ratios: [3.38, 2.00, 1.32, 1.00, 0.62] },
+  "T45":    { g: "Tremec OEM", name: "T-45 (5-speed)", ratios: [3.37, 1.99, 1.33, 1.00, 0.67] },
+
+  /* ---- GM ---- */
+  "M20":    { g: "GM", name: "Muncie M20 wide ratio",   ratios: [2.52, 1.88, 1.46, 1.00] },
+  "M21":    { g: "GM", name: "Muncie M21 close ratio",  ratios: [2.20, 1.64, 1.28, 1.00] },
+  "M22":    { g: "GM", name: "Muncie M22 Rock Crusher", ratios: [2.20, 1.64, 1.28, 1.00] },
+  "ST10":   { g: "GM", name: "Borg-Warner Super T10",   ratios: [2.64, 1.75, 1.33, 1.00],
+              note: "Built in a long list of ratio sets — confirm yours against the case tag." },
+  "SAG4":   { g: "GM", name: "Saginaw 4-speed",         ratios: [2.54, 1.80, 1.44, 1.00] },
+
+  /* ---- Ford ---- */
+  "TOPLOAD":{ g: "Ford", name: "Toploader 4-speed", ratios: [2.78, 1.93, 1.36, 1.00],
+              sets: { "Wide ratio":  [2.78, 1.93, 1.36, 1.00],
+                      "Close ratio": [2.32, 1.69, 1.29, 1.00] } },
+  "MT82":   { g: "Ford", name: "MT82 (S197 / S550 6-speed)", ratios: [3.66, 2.43, 1.69, 1.32, 1.00, 0.65] },
+
+  /* ---- Mopar ---- */
+  "A833":   { g: "Mopar", name: "A833 4-speed", ratios: [2.66, 1.91, 1.39, 1.00],
+              sets: { "Wide ratio":  [2.66, 1.91, 1.39, 1.00],
+                      "Close ratio": [2.44, 1.77, 1.34, 1.00] } },
+
+  "CUSTOM": { g: "Custom", name: "Custom", ratios: [3.27, 1.98, 1.34, 1.00, 0.68] }
+};
+
+const CATALOG = { auto: AUTOS, manual: MANUALS };
+const catalog = () => CATALOG[S.type];
+const def     = k => catalog()[k];
+
+/* Holley steps 100/15 and truncates the label; HP Tuners steps 6.25 and rounds half down. */
+const AXES = {
+  16: Array.from({ length: 16 }, (_, i) => i * 100 / 15),
+  17: Array.from({ length: 17 }, (_, i) => i * 6.25),
+  11: Array.from({ length: 11 }, (_, i) => i * 10)
+};
+
+const COLORS = ["#E0453C","#F0A63C","#F5D64E","#7AC74F","#3FB8AF","#4A90E2","#9B7BD8","#E070B0","#9AA3B0"];
+
+/* ============================================================
+   State — every shift point is stored in MPH.
+   up[j][i]   = upshift   gear j+1 -> j+2, at TPS row i
+   down[j][i] = downshift gear j+2 -> j+1, at TPS row i
+   ============================================================ */
+const S = {
+  tire: 28.5, tw: 275, ta: 53.1, tr: 17, tireMode: "in",
+  fdr: 3.73, redline: 6200, slip: 0,
+  type: "auto", pick: { auto: "4L60E", manual: "TKX" }, stall: 0, wot: [],
+  transKey: "4L60E", gearSet: "Stock", ratios: AUTOS["4L60E"].ratios.slice(),
+  axis: 16, gy: "MPH", tsvUnit: "MPH", tsvFmt: "hpt", tsvMap: "1", tsvDrop: 800, tsvDropMode: "rpm",
+  show: "both", focus: -1, snap: true,
+  dsLen: 52, dsOD: 3.5, dsWall: 0.083, dsMat: "steel",
+  up: [], down: []
+};
+
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   Math
+   ============================================================ */
+const slipFactor = () => 1 / (1 - Math.min(S.slip, 34) / 100);
+
+function mphToRpm(mph, gearRatio) {
+  return S.tire ? mph * K * gearRatio * S.fdr / S.tire * slipFactor() : 0;
+}
+function rpmToMph(rpm, gearRatio) {
+  const d = K * gearRatio * S.fdr * slipFactor();
+  return d ? rpm * S.tire / d : 0;
+}
+
+/* What the input shaft is turning — the geometric number, before any slip.
+   Compared against stall this says whether the converter is coupled or flashing. */
+function turbineRpm(mph, gearRatio) {
+  return S.tire ? mph * K * gearRatio * S.fdr / S.tire : 0;
+}
+
+const tpsAxis    = () => AXES[S.axis];
+const shiftCount = () => Math.max(0, S.ratios.length - 1);
+const ratioOf    = g => S.ratios[g - 1] || 1;
+
+/* Row j leaves gear j+1 for j+2 on an upshift, and the reverse coming back down. */
+const gearsFor = (kind, j) => kind === "up"
+  ? { from: j + 1, to: j + 2 }
+  : { from: j + 2, to: j + 1 };
+
+const rowLabel  = (kind, j) => { const g = gearsFor(kind, j); return `${g.from} → ${g.to} Shift`; };
+const pairLabel = j => `${j + 1}-${j + 2}`;
+
+const snap   = v => S.snap ? Math.round(v) : Math.round(v * 10) / 10;
+const fmtMph = v => S.snap ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1);
+const fmtRpm = v => Math.round(v).toLocaleString("en-US");
+
+const fmtTps = v => {
+  if (S.axis === 16) return String(Math.floor(v + 1e-9));   // Holley truncates: 6.67 -> 6
+  const r = Math.ceil(v - 0.5);                             // HP Tuners rounds half down: 12.5 -> 12
+  return String(r === 0 ? 0 : r);
+};
+
+/* ============================================================
+   Tire — inches and metric, each solvable from the other
+
+   A metric size carries three numbers and the diameter only one, so going
+   back the other way needs an anchor. The wheel and the tread width are the
+   parts you actually own, so those hold and the aspect ratio is what solves.
+   ============================================================ */
+const metricToDia   = (w, a, r) => r + 2 * (w * a / 100) / 25.4;
+const diaToAspect   = (dia, w, r) => (dia - r) * 25.4 / 2 / w * 100;
+
+function readMetric() {
+  const w = parseFloat($("tw").value), a = parseFloat($("ta").value), r = parseFloat($("tr").value);
+  if (!isFinite(w) || !isFinite(a) || !isFinite(r) || w <= 0 || r <= 0) return false;
+  S.tw = w; S.ta = a; S.tr = r;
+  return true;
+}
+
+function solveDiameter() { S.tire = Math.round(metricToDia(S.tw, S.ta, S.tr) * 100) / 100; }
+function solveAspect()   { S.ta   = Math.round(diaToAspect(S.tire, S.tw, S.tr) * 10) / 10; }
+
+/* Repaint the tire block. Skip whatever has the caret so typing is not fought. */
+function paintTire(all) {
+  const metric = S.tireMode === "metric";
+  const set = (id, val, derived) => {
+    const el = $(id);
+    if (all || el !== document.activeElement) el.value = val;
+    el.readOnly = derived;
+    el.classList.toggle("derived", derived);
+  };
+  // whichever unit you picked is the only one you type in
+  set("tire", S.tire.toFixed(2), metric);
+  set("tw",   String(S.tw),      !metric);
+  set("ta",   S.ta.toFixed(1),   !metric);
+  set("tr",   String(S.tr),      !metric);
+
+  $("tireHint").textContent = metric
+    ? `${S.tw}/${Math.round(S.ta)}R${S.tr} → ${S.tire.toFixed(2)} in diameter`
+    : `${S.tire.toFixed(2)} in → about ${S.tw}/${Math.round(S.ta)}R${S.tr}`;
+}
+
+/* ============================================================
+   Seeding
+   ============================================================ */
+function buildTables() {
+  const lo    = +$("afLo").value    || 1800;
+  const hi    = +$("afHi").value    || 6000;
+  const hyst  = +$("afHyst").value  || 0;
+  const floor = +$("afFloor").value || 0;
+  const rows  = tpsAxis();
+
+  S.up = Array.from({ length: shiftCount() }, (_, j) =>
+    rows.map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), ratioOf(j + 1))))
+  );
+  S.down = S.up.map(r => r.map(v => snap(Math.max(floor, v - hyst))));
+  buildWot();
+}
+
+/* Keep the operator's numbers when the TPS axis changes. */
+function reaxis(oldRows, newRows) {
+  const lerp = grid => grid.map(row => newRows.map(t => {
+    let i = 0;
+    while (i < oldRows.length - 2 && oldRows[i + 1] < t) i++;
+    const a = oldRows[i], b = oldRows[i + 1];
+    const f = b === a ? 0 : (t - a) / (b - a);
+    return snap(row[i] + ((row[i + 1] ?? row[i]) - row[i]) * f);
+  }));
+  S.up = lerp(S.up);
+  S.down = lerp(S.down);
+}
+
+/* ============================================================
+   Setup rail
+   ============================================================ */
+function renderTransSelect() {
+  const groups = {};
+  Object.entries(catalog()).forEach(([k, t]) => { (groups[t.g] = groups[t.g] || []).push([k, t]); });
+  $("trans").innerHTML = Object.entries(groups).map(([g, items]) =>
+    `<optgroup label="${g}">` +
+    items.map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("") +
+    `</optgroup>`).join("");
+  $("trans").value = S.transKey;
+}
+
+/* Named gear sets where a transmission has them; Custom the moment a ratio is hand-edited. */
+function gearSetsFor(key) {
+  const t = def(key);
+  return t.sets || { "Stock": t.ratios };
+}
+
+function renderGearSet() {
+  const names = Object.keys(gearSetsFor(S.transKey));
+  $("gearset").innerHTML =
+    names.map(n => `<option value="${n}">${n}</option>`).join("") +
+    '<option value="__custom">Custom</option>';
+  $("gearset").value = names.includes(S.gearSet) ? S.gearSet : names[0];
+  S.gearSet = $("gearset").value;
+  $("transNote").textContent = def(S.transKey).note || "";
+}
+
+/* Hand-editing a ratio leaves the transmission named but flags the set as custom. */
+function markCustom() { S.gearSet = "__custom"; $("gearset").value = "__custom"; }
+
+/* A different gear set invalidates the old shift points, so every path re-seeds. */
+function applyGears(ratios) {
+  S.ratios = ratios.slice();
+  buildTables();
+  renderRatios(); renderTopSpeeds(); renderFocusSel(); renderWot(); renderTable();
+}
+
+/* Auto or manual. Each side remembers what you last had selected. */
+function applyType() {
+  const manual = S.type === "manual";
+  S.transKey = catalog()[S.pick[S.type]] ? S.pick[S.type] : Object.keys(catalog())[0];
+  S.pick[S.type] = S.transKey;
+
+  renderTransSelect();
+  S.gearSet = Object.keys(gearSetsFor(S.transKey))[0];
+  renderGearSet();
+
+  // a clutch slips too, so the same percentage just changes what it is called
+  $("stallField").style.display = manual ? "none" : "";
+  $("slipLabel").textContent = manual ? "Clutch Slip" : "Converter Slip";
+  $("slipHint").textContent  = manual
+    ? "% — slip across the disc, raises engine rpm"
+    : "% — converter slip, raises engine rpm";
+
+  applyGears(def(S.transKey).ratios);
+}
+
+function renderRatios() {
+  $("ratios").innerHTML = S.ratios.map((r, i) => `
+    <div class="cellbox">
+      <span class="gn">Gear ${i + 1}</span>
+      <input type="number" step="0.001" min="0.1" max="12" value="${r.toFixed(3)}" data-gear="${i}"
+             aria-label="Gear ${i + 1} ratio">
+    </div>`).join("") + `
+    <div class="cellbox">
+      <span class="gn">Gears</span>
+      <input type="number" step="1" min="2" max="10" value="${S.ratios.length}" id="gearCountInput"
+             aria-label="Number of forward gears">
+    </div>`;
+
+  $("ratios").querySelectorAll("input[data-gear]").forEach(inp => {
+    inp.addEventListener("change", e => {
+      const i = +e.target.dataset.gear, v = parseFloat(e.target.value);
+      if (isFinite(v) && v > 0) { S.ratios[i] = v; markCustom(); }
+      e.target.value = S.ratios[i].toFixed(3);
+      renderTopSpeeds(); refreshCells();
+    });
+  });
+
+  $("gearCountInput").addEventListener("change", e => {
+    const n = Math.max(2, Math.min(10, Math.round(+e.target.value) || S.ratios.length));
+    while (S.ratios.length < n) S.ratios.push(+(S.ratios[S.ratios.length - 1] * 0.82).toFixed(3));
+    S.ratios.length = n;
+    markCustom();
+    buildTables(); renderRatios(); renderTopSpeeds(); renderFocusSel(); renderTable();
+  });
+
+  $("gearcount").textContent = S.ratios.length + " forward gears";
+}
+
+function renderTopSpeeds() {
+  $("topspeeds").innerHTML = S.ratios.map((r, i) => `
+    <div class="cellbox">
+      <span class="gn">${i + 1}${["st","nd","rd"][i] || "th"} @ redline</span>
+      <span class="v">${Math.round(rpmToMph(S.redline, r))}</span>
+      <span class="u">mph at ${fmtRpm(S.redline)} rpm</span>
+    </div>`).join("");
+}
+
+function renderFocusSel() {
+  const opts = ['<option value="-1">All shifts</option>'];
+  for (let j = 0; j < shiftCount(); j++) opts.push(`<option value="${j}">${pairLabel(j)}</option>`);
+  $("focusSel").innerHTML = opts.join("");
+  $("focusSel").value = String(Math.min(S.focus, shiftCount() - 1));
+  S.focus = +$("focusSel").value;
+}
+
+/* ============================================================
+   The numbers — mph over rpm, both live
+   ============================================================ */
+function renderTable() {
+  const rows = tpsAxis(), n = shiftCount();
+
+  let h = '<thead><tr><th class="corner">Throttle Position %</th>';
+  rows.forEach(t => { h += `<th>${fmtTps(t)}</th>`; });
+  h += "</tr></thead><tbody>";
+
+  const rowHtml = (kind, j) =>
+    `<tr class="${kind}"><th>${rowLabel(kind, j)}</th>` +
+    rows.map((t, i) => {
+      const where = `${rowLabel(kind, j)} at ${fmtTps(t)} percent throttle`;
+      return `<td data-k="${kind}" data-j="${j}" data-i="${i}"><div class="duo">
+        <input class="mph" type="text" inputmode="decimal" data-u="mph" data-k="${kind}" data-j="${j}" data-i="${i}"
+               aria-label="${where}, road speed in mph">
+        <input class="rpm" type="text" inputmode="numeric" data-u="rpm" data-k="${kind}" data-j="${j}" data-i="${i}"
+               aria-label="${where}, engine rpm leaving gear ${gearsFor(kind, j).from}">
+      </div></td>`;
+    }).join("") + "</tr>";
+
+  for (let j = 0; j < n; j++) h += rowHtml("up", j);
+  h += `<tr class="gap"><th></th>${"<td></td>".repeat(rows.length)}</tr>`;
+  for (let j = 0; j < n; j++) h += rowHtml("down", j);
+  h += "</tbody>";
+
+  $("tbl").innerHTML = h;
+
+  $("tbl").querySelectorAll(".duo input").forEach(inp => {
+    onCommit(inp, onCellInput);                 // Enter, or leaving the cell
+    inp.addEventListener("keydown", onCellKey); // arrows still nudge live
+    inp.addEventListener("focus",  e => showDetail(e.target));
+  });
+  $("tbl").addEventListener("mouseover", e => {
+    const inp = e.target.closest(".duo input");
+    if (inp) showDetail(inp);
+  });
+
+  writeInputs();
+  refreshCells();
+
+  renderDetail();
+}
+
+const gridOf   = k => k === "up" ? S.up : S.down;
+const cellRefs = el => ({ k: el.dataset.k, j: +el.dataset.j, i: +el.dataset.i, u: el.dataset.u });
+
+/* Typing in either line rewrites the stored mph; the sibling follows. */
+function setCell(k, j, i, u, value) {
+  gridOf(k)[j][i] = u === "mph"
+    ? snap(value)
+    : snap(rpmToMph(value, ratioOf(gearsFor(k, j).from)));
+}
+
+function onCellInput(e) {
+  const { k, j, i, u } = cellRefs(e.target);
+  const v = parseFloat(e.target.value.replace(/,/g, ""));
+  if (isFinite(v) && v >= 0) setCell(k, j, i, u, v);
+
+  // committed, so put the tidy value back even if what was typed was junk
+  const mph = gridOf(k)[j][i];
+  e.target.value = u === "mph" ? fmtMph(mph)
+                               : fmtRpm(mphToRpm(mph, ratioOf(gearsFor(k, j).from)));
+  writeInputs(); refreshCells(); showDetail(e.target);
+}
+
+function onCellKey(e) {
+  if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+  e.preventDefault();
+  const { k, j, i, u } = cellRefs(e.target);
+  const from = ratioOf(gearsFor(k, j).from);
+  const dir  = e.key === "ArrowUp" ? 1 : -1;
+  const step = (e.shiftKey ? 5 : 1) * (u === "mph" ? 1 : 25);
+  const cur  = u === "mph" ? gridOf(k)[j][i] : mphToRpm(gridOf(k)[j][i], from);
+  setCell(k, j, i, u, Math.max(0, cur + dir * step));
+  e.target.value = u === "mph"
+    ? fmtMph(gridOf(k)[j][i])
+    : fmtRpm(mphToRpm(gridOf(k)[j][i], from));
+  writeInputs(); refreshCells(); showDetail(e.target);
+}
+
+function writeInputs() {
+  $("tbl").querySelectorAll(".duo input").forEach(inp => {
+    if (inp === document.activeElement) return;
+    const { k, j, i, u } = cellRefs(inp);
+    const mph = gridOf(k)[j][i];
+    inp.value = u === "mph"
+      ? fmtMph(mph)
+      : fmtRpm(mphToRpm(mph, ratioOf(gearsFor(k, j).from)));
+  });
+}
+
+/* HP Tuners runs its heatmap green -> yellow -> orange across the whole table. */
+function heat(t) {
+  const c = Math.min(1, Math.max(0, t));
+  return `hsl(${(122 - 100 * c).toFixed(0)},68%,${(62 - 8 * c).toFixed(0)}%)`;
+}
+
+function refreshCells() {
+  const all = [...S.up.flat(), ...S.down.flat()].filter(isFinite);
+  const lo = Math.min(...all), hi = Math.max(...all), span = (hi - lo) || 1;
+  const hunt = [], order = [], stalled = [];
+
+  $("tbl").querySelectorAll("td[data-k]").forEach(td => {
+    const { k, j, i } = cellRefs(td);
+    td.style.background = heat((gridOf(k)[j][i] - lo) / span);
+
+    let bad = false;
+    if (k === "down" && S.down[j][i] >= S.up[j][i]) {
+      bad = true; hunt.push(`${pairLabel(j)} at ${fmtTps(tpsAxis()[i])}%`);
+    }
+    if (k === "up" && j > 0 && S.up[j][i] <= S.up[j - 1][i]) {
+      bad = true; order.push(`${rowLabel(k, j)} at ${fmtTps(tpsAxis()[i])}%`);
+    }
+    td.classList.toggle("bad", bad);
+
+    // an upshift that lands the turbine under stall means the converter flashes back
+    let under = false;
+    if (S.type === "auto" && S.stall > 0 && k === "up" && !bad) {
+      under = turbineRpm(gridOf(k)[j][i], ratioOf(gearsFor(k, j).to)) < S.stall;
+      if (under) stalled.push(`${pairLabel(j)} at ${fmtTps(tpsAxis()[i])}%`);
+    }
+    td.classList.toggle("understall", under);
+  });
+
+  const msg = [];
+  if (hunt.length) msg.push(
+    `${hunt.length} downshift point${hunt.length === 1 ? " sits" : "s sit"} at or above the matching upshift ` +
+    `(first: ${hunt[0]}). ` + (S.type === "auto"
+      ? `That is usually hunting — though up near wide open it can be deliberate, ` +
+        `where a separate WOT shift table governs the upshift.`
+      : `Grabbing that gear back would put you straight past the upshift point again.`));
+  if (order.length) msg.push(
+    `${order.length} upshift point${order.length === 1 ? " does" : "s do"} not climb past the gear below it ` +
+    `(first: ${order[0]}).`);
+  if (stalled.length) msg.push(
+    `${stalled.length} upshift${stalled.length === 1 ? "" : "s"} land the input shaft below the ` +
+    `${fmtRpm(S.stall)} stall (first: ${stalled[0]}) — at full throttle the converter flashes back up ` +
+    `rather than settling where the table says.`);
+
+  $("status").classList.toggle("warn", msg.length > 0);
+  $("statusText").textContent = msg.length ? msg.join(" ")
+    : "Every downshift sits below its matching upshift, and shift speeds climb cleanly through the gears.";
+
+  renderDetail();
+  refreshWot();
+  drawChart();
+  renderDs();
+  buildTsv();
+}
+
+/* ============================================================
+   WOT shift — one shift point per gear, the way Holley keeps it
+   on its own tab away from the throttle-indexed table.
+   ============================================================ */
+function buildWot() {
+  const last = tpsAxis().length - 1;
+  S.wot = Array.from({ length: shiftCount() }, (_, j) => S.up[j] ? S.up[j][last] : 0);
+}
+
+function setWot(j, unit, v) {
+  S.wot[j] = unit === "mph" ? snap(v) : snap(rpmToMph(v, ratioOf(j + 1)));
+}
+
+function renderWot() {
+  if (!S.wot || S.wot.length !== shiftCount()) buildWot();
+  const stall = S.type === "auto" && S.stall > 0;
+
+  let h = `<thead><tr>
+      <th class="corner">Shift</th><th>Shift RPM</th><th>Shift MPH</th>
+      <th>Lands At</th><th>RPM Drop</th><th>Vs. Redline</th>${stall ? "<th>Vs. Stall</th>" : ""}
+    </tr></thead><tbody>`;
+
+  for (let j = 0; j < shiftCount(); j++) {
+    const g = gearsFor("up", j);
+    h += `<tr class="up"><th>${g.from} → ${g.to} Shift</th>
+      <td class="we"><input type="text" inputmode="numeric" data-w="rpm" data-j="${j}"
+            aria-label="${g.from} to ${g.to} wide open throttle shift rpm"></td>
+      <td class="we"><input type="text" inputmode="decimal" data-w="mph" data-j="${j}"
+            aria-label="${g.from} to ${g.to} wide open throttle shift speed"></td>
+      <td class="wv" data-c="land"></td>
+      <td class="wv" data-c="drop"></td>
+      <td class="wv" data-c="red"></td>
+      ${stall ? '<td class="wv" data-c="stall"></td>' : ""}
+    </tr>`;
+  }
+  $("wotTbl").innerHTML = h + "</tbody>";
+
+  $("wotTbl").querySelectorAll("input[data-w]").forEach(inp => {
+    onCommit(inp, e => {
+      const j = +e.target.dataset.j;
+      const v = parseFloat(e.target.value.replace(/,/g, ""));
+      if (isFinite(v) && v >= 0) setWot(j, e.target.dataset.w, v);
+      refreshWot(); drawChart();
+    });
+  });
+
+  refreshWot();
+}
+
+function refreshWot() {
+  const hot = [], cold = [];
+
+  $("wotTbl").querySelectorAll("tbody tr").forEach((tr, j) => {
+    const g     = gearsFor("up", j);
+    const mph   = S.wot[j];
+    const outR  = mphToRpm(mph, ratioOf(g.from));
+    const inR   = mphToRpm(mph, ratioOf(g.to));
+    const put   = (sel, txt, cls) => {
+      const td = tr.querySelector(sel); if (!td) return;
+      td.textContent = txt;
+      td.className = "wv" + (cls ? " " + cls : "");
+    };
+
+    tr.querySelector('input[data-w="rpm"]').value = fmtRpm(outR);
+    tr.querySelector('input[data-w="mph"]').value = fmtMph(mph);
+
+    put('[data-c="land"]', fmtRpm(inR) + " rpm");
+    put('[data-c="drop"]', fmtRpm(outR - inR));
+
+    const over = outR - S.redline;
+    put('[data-c="red"]', (over >= 0 ? "+" : "−") + fmtRpm(Math.abs(over)), over > 0 ? "hot" : "");
+    if (over > 0) hot.push(pairLabel(j));
+
+    if (S.type === "auto" && S.stall > 0) {
+      const margin = turbineRpm(mph, ratioOf(g.to)) - S.stall;
+      put('[data-c="stall"]', (margin >= 0 ? "+" : "−") + fmtRpm(Math.abs(margin)), margin < 0 ? "cold" : "");
+      if (margin < 0) cold.push(pairLabel(j));
+    }
+  });
+
+  const msg = [];
+  if (hot.length)  msg.push(`${hot.join(", ")} shift${hot.length === 1 ? "s" : ""} past the ${fmtRpm(S.redline)} redline.`);
+  if (cold.length) msg.push(`${cold.join(", ")} land${cold.length === 1 ? "s" : ""} under the ${fmtRpm(S.stall)} stall.`);
+
+  $("wotStatus").classList.toggle("warn", msg.length > 0);
+  $("wotStatusText").textContent = msg.length ? msg.join(" ")
+    : "Every wide-open shift lands inside the usable band.";
+}
+
+/* The strip tracks one cell. Anything that changes the numbers redraws it in place. */
+function showDetail(el) {
+  const { k, j, i } = cellRefs(el);
+  S.detail = { k, j, i };
+  renderDetail();
+}
+
+function renderDetail() {
+  let { k, j, i } = S.detail || {};
+  if (!gridOf(k) || !gridOf(k)[j] || gridOf(k)[j][i] === undefined) {
+    k = "up"; j = 0; i = 0;                    // gears can vanish under it
+    S.detail = { k, j, i };
+  }
+  const mph  = gridOf(k)[j][i];
+  const g    = gearsFor(k, j);
+  const outR = mphToRpm(mph, ratioOf(g.from));
+  const inR  = mphToRpm(mph, ratioOf(g.to));
+  const drop = outR - inR;
+
+  $("detail").innerHTML = `
+    <div class="dcell"><div class="k">Shift</div><div class="v">${g.from} → ${g.to}</div></div>
+    <div class="dcell"><div class="k">Throttle</div><div class="v">${fmtTps(tpsAxis()[i])}%</div></div>
+    <div class="dcell hi"><div class="k">Road speed</div><div class="v">${fmtMph(mph)} mph</div></div>
+    <div class="dcell hi"><div class="k">RPM leaving ${g.from}</div><div class="v">${fmtRpm(outR)}</div></div>
+    <div class="dcell hi"><div class="k">RPM landing in ${g.to}</div><div class="v">${fmtRpm(inR)}</div></div>
+    <div class="dcell"><div class="k">RPM ${drop >= 0 ? "drop" : "rise"}</div><div class="v">${fmtRpm(Math.abs(drop))}</div></div>
+    <div class="dcell"><div class="k">Vs. redline</div><div class="v">${outR > S.redline ? "+" : "−"}${fmtRpm(Math.abs(outR - S.redline))}</div></div>`
+    + stallCells(mph, g);
+}
+
+/* The one converter figure that does not need a K-factor or a torque curve:
+   at full throttle the engine will not pull below stall, so if the input shaft
+   lands under it the engine hangs near stall and the difference is the slip. */
+function stallCells(mph, g) {
+  if (S.type !== "auto" || !(S.stall > 0)) return "";
+  const turbine = turbineRpm(mph, ratioOf(g.to));
+  const margin  = turbine - S.stall;
+  const est     = margin < 0 ? (S.stall - turbine) / S.stall * 100 : S.slip;
+
+  return `
+    <div class="dcell${margin < 0 ? " alert" : ""}">
+      <div class="k">Lands vs. stall</div>
+      <div class="v">${margin >= 0 ? "+" : "−"}${fmtRpm(Math.abs(margin))}</div>
+    </div>
+    <div class="dcell${margin < 0 ? " alert" : ""}">
+      <div class="k">Est. slip at WOT</div>
+      <div class="v">${est.toFixed(0)}%</div>
+    </div>`;
+}
+
+/* ============================================================
+   The graph — Holley layout, triangles on the points
+   ============================================================ */
+function seriesFor(kind) {
+  const rows = tpsAxis();
+  return gridOf(kind).map((row, j) => {
+    const focused = S.focus < 0 || S.focus === j;
+    return {
+      j, kind,
+      label: pairLabel(j) + (kind === "down" ? " down" : ""),
+      color: S.focus < 0 ? COLORS[j % COLORS.length]
+           : focused     ? (kind === "up" ? "#E0453C" : "#4A90E2")
+           : "#39404B",
+      ghost: !focused,
+      dash: kind === "down",
+      pts: rows.map((t, i) => ({
+        x: t,
+        y: S.gy === "MPH" ? row[i] : mphToRpm(row[i], ratioOf(gearsFor(kind, j).from))
+      }))
+    };
+  });
+}
+
+function niceMax(v) {
+  if (v <= 0) return 10;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / mag;
+  return (n <= 1.2 ? 1.2 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+}
+
+let CHART = null;
+
+const isNarrow = () => window.innerWidth < 760;
+
+function drawChart() {
+  // a phone gets a taller, squarer plot instead of a 200px-high letterbox
+  const narrow = isNarrow();
+  const W = narrow ? 600 : 940, H = narrow ? 540 : 500;
+  const M = narrow ? { l: 56, r: 12, t: 14, b: 50 } : { l: 72, r: 20, t: 18, b: 54 };
+  const pw = W - M.l - M.r, ph = H - M.t - M.b;
+  $("chart").setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  let series = [];
+  if (S.show !== "down") series = series.concat(seriesFor("up"));
+  if (S.show !== "up")   series = series.concat(seriesFor("down"));
+  series.sort((a, b) => (a.ghost === b.ghost) ? 0 : a.ghost ? -1 : 1);   // focused pair on top
+
+  const ys = series.flatMap(s => s.pts.map(p => p.y)).filter(isFinite);
+  const yMax = niceMax(Math.max(1, ...ys) * 1.06);
+  const X = t => M.l + (t / 100) * pw;
+  const Y = v => M.t + ph - (v / yMax) * ph;
+
+  let g = `<rect x="${M.l}" y="${M.t}" width="${pw}" height="${ph}" fill="#0A0C0F"/>`;
+
+  for (let i = 0; i <= 8; i++) {
+    const v = yMax * i / 8, y = Y(v);
+    g += `<line x1="${M.l}" y1="${y.toFixed(1)}" x2="${W - M.r}" y2="${y.toFixed(1)}" stroke="#232830"/>`;
+    g += `<text x="${M.l - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" fill="#B7BAB6"
+            font-family="JetBrains Mono, monospace" font-size="12">${Math.round(v).toLocaleString("en-US")}</text>`;
+  }
+  tpsAxis().forEach((t, i) => {
+    const x = X(t);
+    g += `<line x1="${x.toFixed(1)}" y1="${M.t}" x2="${x.toFixed(1)}" y2="${M.t + ph}" stroke="#1C2027"/>`;
+    // 16 labels collide on a phone, so label every other one and keep the last
+    if (!narrow || i % 2 === 0 || i === tpsAxis().length - 1)
+      g += `<text x="${x.toFixed(1)}" y="${M.t + ph + 21}" text-anchor="middle" fill="#B7BAB6"
+              font-family="JetBrains Mono, monospace" font-size="${narrow ? 12 : 11.5}">${fmtTps(t)}</text>`;
+  });
+
+  const ref = (rpm, color, label) => {
+    if (S.gy !== "RPM" || !(rpm > 0) || rpm > yMax) return "";
+    const y = Y(rpm);
+    return `<line x1="${M.l}" y1="${y.toFixed(1)}" x2="${W - M.r}" y2="${y.toFixed(1)}"
+              stroke="${color}" stroke-width="1.5" stroke-dasharray="2 5"/>
+            <text x="${W - M.r - 6}" y="${(y - 7).toFixed(1)}" text-anchor="end" fill="${color}"
+              font-family="Barlow Condensed, sans-serif" font-size="13" letter-spacing="1.8">${label}</text>`;
+  };
+  g += ref(S.redline, "#D5262B", "REDLINE");
+  if (S.type === "auto") g += ref(S.stall, "#F0A63C", "STALL");
+
+  // Holley draws the WOT shift point as a flat line across the pair you are editing
+  if (S.focus >= 0 && S.wot && S.wot[S.focus] !== undefined) {
+    const mph = S.wot[S.focus];
+    const v = S.gy === "MPH" ? mph : mphToRpm(mph, ratioOf(gearsFor("up", S.focus).from));
+    if (v > 0 && v <= yMax) {
+      const y = Y(v);
+      g += `<line x1="${M.l}" y1="${y.toFixed(1)}" x2="${W - M.r}" y2="${y.toFixed(1)}"
+              stroke="#E7E4DF" stroke-width="1.6"/>
+            <text x="${M.l + 6}" y="${(y - 7).toFixed(1)}" fill="#E7E4DF"
+              font-family="Barlow Condensed, sans-serif" font-size="13" letter-spacing="1.8">WOT SHIFT</text>`;
+    }
+  }
+
+  g += `<line x1="${M.l}" y1="${M.t}" x2="${M.l}" y2="${M.t + ph}" stroke="#3C4350" stroke-width="1.5"/>`;
+  g += `<line x1="${M.l}" y1="${M.t + ph}" x2="${W - M.r}" y2="${M.t + ph}" stroke="#3C4350" stroke-width="1.5"/>`;
+  g += `<text x="${M.l + pw / 2}" y="${H - 10}" text-anchor="middle" fill="#DCDDD9"
+          font-family="Barlow Condensed, sans-serif" font-size="14" letter-spacing="2.6">TPS (%)</text>`;
+  g += `<text transform="translate(20,${M.t + ph / 2}) rotate(-90)" text-anchor="middle" fill="#DCDDD9"
+          font-family="Barlow Condensed, sans-serif" font-size="14" letter-spacing="2.6">${
+            S.gy === "MPH" ? "SPEED (MPH)" : "ENGINE RPM"}</text>`;
+
+  // Holley marks upshifts with an up triangle and downshifts with a down triangle.
+  const tri = (x, y, down) => down
+    ? `M${x - 4.6} ${y - 3.6}L${x + 4.6} ${y - 3.6}L${x} ${y + 4.4}Z`
+    : `M${x - 4.6} ${y + 3.6}L${x + 4.6} ${y + 3.6}L${x} ${y - 4.4}Z`;
+
+  series.forEach(s => {
+    const op = s.ghost ? 0.5 : 1;
+    const d = s.pts.map((p, i) => `${i ? "L" : "M"}${X(p.x).toFixed(1)} ${Y(p.y).toFixed(1)}`).join(" ");
+    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.ghost ? 1.4 : s.dash ? 2.2 : 2.8}"
+            stroke-linejoin="round" stroke-linecap="round" opacity="${op}"
+            ${s.dash ? 'stroke-dasharray="7 5"' : ""}/>`;
+    if (!s.ghost) s.pts.forEach(p => {
+      g += `<path d="${tri(X(p.x), Y(p.y), s.dash)}" fill="${s.color}"/>`;
+    });
+  });
+
+  g += `<line id="xhair" x1="0" y1="${M.t}" x2="0" y2="${M.t + ph}" stroke="#F0A63C" opacity="0"/>`;
+  g += `<rect id="hit" x="${M.l}" y="${M.t}" width="${pw}" height="${ph}" fill="transparent"/>`;
+
+  $("chart").innerHTML = g;
+  CHART = { W, H, M, pw, ph, X, Y, series };
+
+  $("legend").innerHTML = series.filter(s => !s.ghost).map(s =>
+    `<span class="lgi"><span class="sw" style="border-top-color:${s.color};border-top-style:${
+      s.dash ? "dashed" : "solid"}"></span>${s.label}</span>`).join("");
+
+  wireHover();
+}
+
+function wireHover() {
+  const svg = $("chart"), hit = svg.querySelector("#hit"), xh = svg.querySelector("#xhair"), ro = $("readout");
+  if (!hit) return;
+
+  const track = clientX => {
+    const r = svg.getBoundingClientRect();
+    const t = Math.max(0, Math.min(100,
+      ((clientX - r.left) * (CHART.W / r.width) - CHART.M.l) / CHART.pw * 100));
+
+    const rows = tpsAxis();
+    let idx = 0, best = Infinity;
+    rows.forEach((v, i) => { const d = Math.abs(v - t); if (d < best) { best = d; idx = i; } });
+
+    const gx = CHART.X(rows[idx]);
+    xh.setAttribute("x1", gx); xh.setAttribute("x2", gx); xh.setAttribute("opacity", "0.85");
+
+    // the crosshair carries both numbers too, whichever way the graph is plotted
+    ro.innerHTML = `<div class="rt">${fmtTps(rows[idx])}% Throttle</div>` +
+      CHART.series.filter(s => !s.ghost).map(s => {
+        const row  = gridOf(s.kind)[s.j];
+        const mph  = row[idx];
+        const rpm  = mphToRpm(mph, ratioOf(gearsFor(s.kind, s.j).from));
+        return `<div class="row"><span class="sw" style="background:${s.color}"></span>
+          <span class="nm">${s.label}</span>
+          <span class="vl">${fmtMph(mph)} mph · ${fmtRpm(rpm)} rpm</span></div>`;
+      }).join("");
+
+    const px = gx / CHART.W * r.width;
+    ro.style.opacity = "1";
+    const left = px > r.width * 0.55 ? px - ro.offsetWidth - 16 : px + 16;
+    ro.style.left = Math.max(4, Math.min(left, r.width - ro.offsetWidth - 4)) + "px";
+    ro.style.top = "26px";
+  };
+
+  const clear = () => { xh.setAttribute("opacity", "0"); ro.style.opacity = "0"; };
+
+  hit.addEventListener("mousemove", ev => track(ev.clientX));
+  hit.addEventListener("mouseleave", clear);
+
+  // drag a finger along the plot to read it on a phone
+  const touch = ev => {
+    if (!ev.touches.length) return;
+    ev.preventDefault();
+    track(ev.touches[0].clientX);
+  };
+  hit.addEventListener("touchstart", touch, { passive: false });
+  hit.addEventListener("touchmove",  touch, { passive: false });
+  hit.addEventListener("touchend",   clear);
+}
+
+
+/* ============================================================
+   Driveshaft critical speed
+
+   First bending mode of a simply supported hollow tube:
+       Nc = (30π/4) · √(E/ρ) · √(OD² + ID²) / L²
+   The material half collapses to one constant. The steel figure reproduces
+   the published driveshaft tables — 3.0" x 55" lands on 6,503 rpm and
+   3.5" x 50" on 9,217, against roughly 6,500 and 9,200 in print.
+
+   ⭐ Aluminum comes out at 98% of steel for the SAME tube. An aluminum shaft
+   spins higher because it is built in a bigger diameter, not because the
+   alloy helps. Carbon is the real gain at about 169%.
+   ⚠️ Carbon varies a lot with layup, so treat its number as an estimate.
+   ============================================================ */
+const DS_C = { steel: 4766743, alum: 4676719, carbon: 8066493 };
+const DS_LABEL = { steel: "steel", alum: "aluminum", carbon: "carbon" };
+
+function criticalRpm() {
+  const id = S.dsOD - 2 * S.dsWall;
+  if (!(S.dsOD > 0 && id > 0 && S.dsLen > 0)) return 0;
+  return DS_C[S.dsMat] * Math.sqrt(S.dsOD * S.dsOD + id * id) / (S.dsLen * S.dsLen);
+}
+
+/* The shaft sits downstream of the gearbox, so it turns with road speed and the
+   final drive alone — no transmission ratio, and no converter slip. */
+function driveshaftRpm(mph) {
+  return S.tire ? mph * K * S.fdr / S.tire : 0;
+}
+
+/* Fastest the shaft ever turns is top gear at redline. */
+function topSpeedMph() {
+  return rpmToMph(S.redline, S.ratios[S.ratios.length - 1] || 1);
+}
+
+/* ⭐ The road speed at which the shaft goes critical is the honest headline: it falls out
+   of the driveline alone and needs no guess about whether the car can actually pull top
+   gear to redline. Gear-limited top speed is shown too, but labelled for what it is. */
+function criticalMph(nc) {
+  const d = K * S.fdr;
+  return d && S.tire ? nc * S.tire / d : 0;
+}
+
+function renderDs() {
+  const nc   = criticalRpm();
+  const cMph = criticalMph(nc);
+  const mph  = topSpeedMph();
+  const ds   = driveshaftRpm(mph);
+  const pct  = nc > 0 ? ds / nc * 100 : 0;
+  const id   = S.dsOD - 2 * S.dsWall;
+  const top  = S.ratios.length;
+  const ord  = top + (["st","nd","rd"][top - 1] || "th");
+  const col  = pct >= 85 ? "var(--red-lit)" : pct >= 70 ? "var(--amber)" : "var(--green)";
+  const dash = "—";
+
+  $("dsOut").innerHTML = `
+    <div class="cellbox">
+      <span class="gn">Critical Speed</span>
+      <span class="v">${nc > 0 ? fmtRpm(nc) : dash}</span>
+      <span class="u">${S.dsOD.toFixed(3)}&Prime; OD · ${id > 0 ? id.toFixed(3) : "?"}&Prime; ID · ${DS_LABEL[S.dsMat]}</span>
+    </div>
+    <div class="cellbox">
+      <span class="gn">Goes Critical At</span>
+      <span class="v" style="color:var(--amber)">${nc > 0 ? Math.round(cMph) : dash}</span>
+      <span class="u">mph, in any gear</span>
+    </div>
+    <div class="cellbox">
+      <span class="gn">At ${ord} Redline</span>
+      <span class="v" style="color:${col}">${fmtRpm(ds)}</span>
+      <span class="u">shaft rpm at ${fmtMph(mph)} mph</span>
+    </div>
+    <div class="cellbox">
+      <span class="gn">Of Critical</span>
+      <span class="v" style="color:${col}">${nc > 0 ? pct.toFixed(0) + "%" : dash}</span>
+      <span class="u">70% is the usual ceiling</span>
+    </div>
+    <div class="cellbox">
+      <span class="gn">Longest Safe Tube</span>
+      <span class="v">${maxSafeLength(ds) || dash}</span>
+      <span class="u">in, same tube at 70%</span>
+    </div>`;
+
+  let msg, warn = false;
+  if (!(nc > 0)) {
+    msg = "Enter a length, an outside diameter and a wall thickness to check the shaft.";
+    warn = true;
+  } else {
+    const head = `This shaft reaches its critical speed at ${Math.round(cMph)} mph, and 70% of it at `
+               + `${Math.round(cMph * 0.7)} mph. `;
+    if (pct >= 100) {
+      msg = head + `Pulling ${ord} to redline would take it past critical — ${fmtRpm(ds)} rpm against `
+          + `${fmtRpm(nc)}. If the car can actually get there, shorten the shaft, go up a tube size, or split it in two.`;
+      warn = true;
+    } else if (pct >= 70) {
+      msg = head + `${ord} at redline puts it at ${pct.toFixed(0)}% of critical. Most shops stop at 70%.`;
+      warn = true;
+    } else {
+      msg = head + `${ord} at redline only reaches ${pct.toFixed(0)}%, so the shaft has room.`;
+    }
+  }
+  $("dsStatus").classList.toggle("warn", warn);
+  $("dsStatusText").textContent = msg;
+}
+
+/* Invert the formula: how long this same tube could be and still sit at 70%. */
+function maxSafeLength(ds) {
+  if (!(ds > 0)) return "";
+  const id = S.dsOD - 2 * S.dsWall;
+  if (!(id > 0)) return "";
+  const target = ds / 0.70;                       // the critical speed we would need
+  return Math.floor(Math.sqrt(DS_C[S.dsMat] * Math.sqrt(S.dsOD * S.dsOD + id * id) / target) * 10) / 10;
+}
+
+/* ============================================================
+   Clipboard transfer — HP Tuners row order
+   ============================================================ */
+function line(kind, j) {
+  return gridOf(kind)[j].map(mph =>
+    S.tsvUnit === "MPH" ? fmtMph(mph)
+                        : String(Math.round(mphToRpm(mph, ratioOf(gearsFor(kind, j).from))))
+  ).join("\t");
+}
+
+/* ============================================================
+   TurboLamik 8HP layout
+
+   Verified against manual.turbolamik.eu, "Shift points tuning" (updated 2025-05-26).
+   The table is `Automatic gear change UP TPS%`, with a matching DOWN table:
+
+     rows    map 1 .. map 8   - AGGRESSIVENESS PROGRAMS, not gears
+     columns 0 10 20 .. 100   - throttle %, eleven of them
+     values  engine RPM, and the SAME rpm applies in every gear
+
+   That last line is the whole shape of it. TurboLamik shifts on rpm whatever gear you
+   are in, so one map row is one rpm-vs-throttle curve. Our grid stores a shift point per
+   gear PAIR, but the autofill drives every pair from one rpm ramp, so it collapses back
+   to a single curve cleanly. If the gears have been pulled apart by hand, tlCurve reports
+   the spread rather than quietly averaging it away.
+
+   The program names on the picker are TurboLamik's documented defaults (P1 auto comfort
+   ... P8 dyno). The manual does not state that map N belongs to program N - that pairing
+   is the obvious reading, not a quoted fact.
+   ============================================================ */
+const TL_TPS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+/* Read a stored row at any throttle value, whatever axis it was built on. */
+function lerpAt(axis, row, t) {
+  if (t <= axis[0]) return row[0];
+  if (t >= axis[axis.length - 1]) return row[row.length - 1];
+  let i = 0;
+  while (i < axis.length - 2 && axis[i + 1] < t) i++;
+  const a = axis[i], b = axis[i + 1];
+  const f = b === a ? 0 : (t - a) / (b - a);
+  return row[i] + ((row[i + 1] ?? row[i]) - row[i]) * f;
+}
+
+/* One gear-independent rpm curve across TL_TPS, plus how far the gears disagree. */
+function tlCurve(kind) {
+  const axis = tpsAxis();
+  const vals = [], spread = [];
+  TL_TPS.forEach(t => {
+    const per = [];
+    for (let j = 0; j < shiftCount(); j++) {
+      per.push(mphToRpm(lerpAt(axis, gridOf(kind)[j], t), ratioOf(gearsFor(kind, j).from)));
+    }
+    if (!per.length) { vals.push(0); spread.push(0); return; }
+    vals.push(per.reduce((a, b) => a + b, 0) / per.length);
+    spread.push(Math.max.apply(null, per) - Math.min.apply(null, per));
+  });
+  return { vals: vals, worstSpread: Math.max.apply(null, spread) };
+}
+
+/* Biggest rev rise coming down a gear. Downshifting out of gear g lands you in g-1 at
+   ratio(g-1)/ratio(g) times the revs, so the steepest pair is the one that decides
+   whether a given downshift rpm will bounce you straight back off the upshift. */
+function maxRatioStep() {
+  let worst = 1;
+  for (let g = 2; g <= S.ratios.length; g++) {
+    const step = ratioOf(g - 1) / ratioOf(g);
+    if (step > worst) worst = step;
+  }
+  return worst;
+}
+
+/* ⭐ The DOWN row is the UP curve minus a fixed rpm, NOT the grid's own downshift.
+   The grid sets its hysteresis in mph, which is a different rpm in every gear, so it
+   cannot be written into a table that holds one rpm for all of them. An rpm drop is
+   what a gear-independent controller actually wants. */
+function tlDownVals() {
+  const pct = S.tsvDropMode === "pct";
+  return tlCurve("up").vals.map(v =>
+    Math.max(0, pct ? v * (1 - Math.min(S.tsvDrop, 95) / 100) : v - S.tsvDrop));
+}
+
+function tlRow(kind) {
+  const vals = kind === "down" ? tlDownVals() : tlCurve("up").vals;
+  return vals.map(v => String(Math.round(v))).join("\t");
+}
+
+function buildTsv() {
+  if (S.tsvFmt === "tl") {
+    const up = tlRow("up"), down = tlRow("down");
+    $("tsv").value = S.tsvMap === "all"
+      ? Array(8).fill(up).concat(Array(8).fill(down)).join("\n")
+      : up + "\n" + down;
+    renderTsvNote();
+    return;
+  }
+  const out = [];
+  for (let j = 0; j < shiftCount(); j++) out.push(line("up", j));
+  for (let j = 0; j < shiftCount(); j++) out.push(line("down", j));
+  $("tsv").value = out.join("\n");
+}
+
+/* Reading one back writes that rpm curve onto EVERY gear, which is what a
+   gear-independent table means. Two lines: up then down. A pasted 16-row block is
+   one curve per table anyway, so row 1 and row 9 are the ones read. */
+function loadTl(parsed) {
+  const axis = tpsAxis();
+  const upRow = parsed[0];
+  const downRow = parsed.length >= 9 ? parsed[8] : parsed[1];
+  /* Reading a pair back, the drop is whatever gap they were written with. */
+  if (upRow && downRow && upRow.length && downRow.length) {
+    const n = Math.min(upRow.length, downRow.length);
+    let sum = 0;
+    for (let i = 0; i < n; i++) sum += upRow[i] - downRow[i];
+    const gap = Math.round(sum / n);
+    if (isFinite(gap) && gap >= 0) { S.tsvDrop = gap; $("tsvDrop").value = gap; }
+  }
+  let used = 0;
+  [["up", upRow], ["down", downRow]].forEach(function (pair) {
+    const kind = pair[0], row = pair[1];
+    if (!row || !row.length) return;
+    const vals = row.slice(0, TL_TPS.length);
+    axis.forEach((t, i) => {
+      const rpm = lerpAt(TL_TPS, vals, t);
+      for (let j = 0; j < shiftCount(); j++) { setCell(kind, j, i, "rpm", rpm); used++; }
+    });
+  });
+  return used;
+}
+
+function loadTsv() {
+  const parsed = $("tsv").value.trim().split(/\r?\n/)
+    .map(l => l.trim().split(/[\t,;]+|\s+/).map(v => parseFloat(v.replace(/,/g, ""))).filter(isFinite))
+    .filter(r => r.length);
+  if (!parsed.length) { flash($("btnPaste"), "Nothing to read"); return; }
+
+  if (S.tsvFmt === "tl") {
+    const got = loadTl(parsed);
+    writeInputs(); refreshCells();
+    flash($("btnPaste"), got ? got + " cells read" : "No usable rows");
+    return;
+  }
+
+  const n = shiftCount(), cols = tpsAxis().length;
+  let used = 0;
+  parsed.slice(0, n * 2).forEach((row, r) => {
+    const kind = r < n ? "up" : "down";
+    const j    = r < n ? r : r - n;
+    row.slice(0, cols).forEach((v, i) => {
+      setCell(kind, j, i, S.tsvUnit === "MPH" ? "mph" : "rpm", v);
+      used++;
+    });
+  });
+
+  writeInputs(); refreshCells();
+  flash($("btnPaste"), `${used} cells read`);
+}
+
+
+/* The two formats are different enough that one description would fit neither. */
+function renderTsvNote() {
+  const tl = S.tsvFmt === "tl";
+  // MPH/RPM is meaningless in the TurboLamik layout, which is always engine rpm
+  $("tsvSeg").style.opacity = tl ? ".4" : "";
+  $("tsvSeg").querySelectorAll("button").forEach(b => { b.disabled = tl; });
+  $("tsvMapWrap").hidden = !tl;
+  $("tsvDropWrap").hidden = !tl;
+
+  if (!tl) {
+    $("tsvNote").innerHTML =
+      "<b>Copy Table</b> writes the grid as tab-separated rows in the same order HP Tuners uses &mdash; " +
+      "upshifts first, then downshifts, one row per shift, one column per TPS breakpoint. Paste it straight " +
+      "onto the table in the tuning software. <b>Load Into Table</b> reads it back, so you can pull a table " +
+      "out of HP Tuners or Holley and see what rpm it actually shifts at. Tabs, commas or spaces all parse.";
+    return;
+  }
+
+  const label = S.tsvMap === "all" ? "all eight rows" : "map " + S.tsvMap;
+  const upSpread = tlCurve("up").worstSpread;
+  const dnSpread = tlCurve("down").worstSpread;
+
+  /* Shift points are stored in whole mph, and one mph is worth a lot of rpm in a low gear -
+     over 200 in the 8HP's 4.714 first. So the gears always differ a little just from
+     rounding, and the tolerance has to be that resolution rather than a fixed number. */
+  const tol = mphToRpm(S.snap ? 1 : 0.1, ratioOf(1));
+
+  let warn = "";
+
+  /* An upshift SHOULD collapse to one rpm - the autofill drives every gear from one ramp.
+     Past the rounding noise means the grid was edited by hand. */
+  if (upSpread > tol) {
+    warn += " &nbsp;&middot;&nbsp; <b style='color:var(--amber)'>The upshift gears do not agree.</b> " +
+            "This table holds one rpm for every gear, but the grid differs by up to <b>" +
+            Math.round(upSpread) + " rpm</b> between gears at the same throttle, so the row below is their " +
+            "average. Press <b>Build Table</b> to put every gear back on one rpm.";
+  }
+
+  /* Will that drop bounce straight back off the upshift? Coming down a gear multiplies the
+     revs by the ratio step, and the steepest pair decides it. */
+  const step = maxRatioStep();
+  const ups = tlCurve("up").vals;
+  const dns = tlDownVals();
+  const upTop = ups[ups.length - 1];
+  const dnTop = dns[dns.length - 1];
+  const lands = dnTop * step;
+  const pctMode = S.tsvDropMode === "pct";
+  const minPct = Math.ceil((1 - 1 / step) * 100);
+  const minDrop = pctMode ? minPct : Math.ceil(upTop * (1 - 1 / step) / 50) * 50;
+  const minTxt = pctMode ? minPct + "%" : fmtRpm(minDrop) + " rpm";
+
+  /* A flat rpm drop is fine at the top and runs out of road at the bottom, where the
+     upshift rpm is small. Zero there means it never downshifts on a coast-down, which is
+     worse than hunting - so check the whole row, not just full throttle. */
+  const floored = dns.filter(v => v <= 0).length;
+  if (floored > 0 && floored < dns.length) {
+    warn += " &nbsp;&middot;&nbsp; <b style='color:var(--amber)'>The light-throttle end bottoms out.</b> " +
+            "<b>" + floored + "</b> of the " + dns.length + " columns come out at zero, so it would never " +
+            "downshift coasting. A flat rpm drop runs out of room down there &mdash; switch the drop to " +
+            "<b>%</b> and it scales with the shift point instead.";
+  }
+
+  if (dnTop <= 0) {
+    warn += " &nbsp;&middot;&nbsp; <b style='color:var(--amber)'>That drop is bigger than the shift rpm</b>, " +
+            "so the downshift row bottoms out at zero. Try something under " +
+            (pctMode ? "95%" : fmtRpm(upTop)) + ".";
+  } else if (lands >= upTop) {
+    warn += " &nbsp;&middot;&nbsp; <b style='color:var(--amber)'>That drop will hunt at full throttle.</b> " +
+            "Downshifting at " + fmtRpm(dnTop) + " puts you back on the throttle at " + fmtRpm(lands) +
+            " through the steepest pair (&times;" + step.toFixed(2) + "), which is at or past the " +
+            fmtRpm(upTop) + " upshift &mdash; so it shifts straight back up. <b>" + minTxt +
+            " or more</b> clears it.";
+  } else {
+    warn += " &nbsp;&middot;&nbsp; At full throttle it downshifts at <b>" + fmtRpm(dnTop) + "</b> and lands at " +
+            fmtRpm(lands) + " through the steepest pair (&times;" + step.toFixed(2) + "), " +
+            fmtRpm(upTop - lands) + " rpm clear of the upshift.";
+  }
+
+  $("tsvNote").innerHTML =
+    "<b>TurboLamik 8HP</b> &mdash; rows in that table are <b>maps 1&ndash;8</b>, the aggressiveness programs, " +
+    "<b>not gears</b>. One row is one rpm-vs-throttle curve and it applies in <b>every gear</b>. Columns are a " +
+    "fixed 0&ndash;100% in tens whatever axis the table above is set to. &nbsp;&middot;&nbsp; Set the calculator " +
+    "up for the character you want, pick the row, copy, paste it into that row in TunerPro &mdash; then change " +
+    "the calculator and do the next one. <b>Two lines come out for " + label + "</b>: the first is the " +
+    "<b>UP</b> table row, the second the <b>DOWN</b> table row. Those are separate tables in TunerPro, so copy " +
+    "one line at a time. &nbsp;&middot;&nbsp; The downshift row is the upshift curve less the <b>drop</b> you " +
+    "set &mdash; flat <b>rpm</b>, or a <b>%</b> that scales with the shift point &mdash; because the grid's own " +
+    "downshift is in mph, and a fixed mph is a different rpm in every gear." + warn;
+}
+
+function flash(btn, msg) {
+  const old = btn.textContent;
+  btn.textContent = msg;
+  setTimeout(() => { btn.textContent = old; }, 1500);
+}
+
+/* ============================================================
+   Wiring
+   ============================================================ */
+const recalc = () => { renderTopSpeeds(); writeInputs(); refreshCells(); };
+
+/* Values land on Enter or when you leave the box — not on every keystroke,
+   which on a phone means a half-typed "2" never gets treated as a number. */
+function onCommit(el, fn) {
+  el.addEventListener("change", fn);
+  el.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    fn(e);
+    el.blur();                       // drops the on-screen keyboard on mobile
+  });
+}
+
+function bindNum(id, key) {
+  onCommit($(id), e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v)) S[key] = v;
+    e.target.value = S[key];
+    recalc();
+  });
+}
+
+function segment(id, attr, apply) {
+  $(id).addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    apply(b.dataset[attr]);
+  });
+}
+
+function init() {
+  renderTransSelect();
+  renderGearSet();
+  buildTables();
+  renderRatios();
+  renderTopSpeeds();
+  renderFocusSel();
+  renderWot();
+  renderTable();
+
+  paintTire(true);
+  bindNum("fdr", "fdr");
+  bindNum("slip", "slip");
+  bindNum("redline", "redline");
+  onCommit($("stall"), e => {
+    const v = parseFloat(e.target.value);
+    const had = S.stall > 0;
+    S.stall = isFinite(v) && v > 0 ? v : 0;
+    e.target.value = S.stall ? String(S.stall) : "";
+    if (had !== (S.stall > 0)) renderWot();   // the stall column comes and goes with it
+    recalc();
+  });
+
+  // Inches mode: diameter is the anchor, the metric size is solved. Metric mode: the reverse.
+  onCommit($("tire"), e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v) && v > 0) { S.tire = v; solveAspect(); }
+    paintTire(true); recalc();
+  });
+
+  ["tw","ta","tr"].forEach(id => onCommit($(id), () => {
+    if (readMetric()) solveDiameter();
+    paintTire(true); recalc();
+  }));
+
+  ["dsLen","dsOD","dsWall"].forEach(id => bindNum(id, id));
+  $("dsMat").addEventListener("change", e => { S.dsMat = e.target.value; renderDs(); });
+
+  segment("tireSeg", "tm", v => { S.tireMode = v; paintTire(true); });
+
+  segment("typeSeg", "tt", v => { S.type = v; applyType(); });
+
+  $("trans").addEventListener("change", e => {
+    S.transKey = e.target.value;
+    S.gearSet = Object.keys(gearSetsFor(S.transKey))[0];
+    renderGearSet();
+    S.pick[S.type] = S.transKey;
+    applyGears(def(S.transKey).ratios);
+  });
+
+  $("gearset").addEventListener("change", e => {
+    S.gearSet = e.target.value;
+    if (S.gearSet === "__custom") return;           // keep whatever is in the boxes
+    applyGears(gearSetsFor(S.transKey)[S.gearSet]);
+  });
+
+  $("axisSel").addEventListener("change", e => {
+    const oldRows = tpsAxis().slice();
+    S.axis = +e.target.value;
+    reaxis(oldRows, tpsAxis());
+    renderTable();
+  });
+
+  $("focusSel").addEventListener("change", e => { S.focus = +e.target.value; drawChart(); });
+
+  $("snap").addEventListener("change", e => {
+    S.snap = e.target.checked;
+    if (S.snap) { S.up = S.up.map(r => r.map(snap)); S.down = S.down.map(r => r.map(snap)); }
+    writeInputs(); refreshCells();
+  });
+
+  segment("gySeg",   "gy",   v => { S.gy = v; drawChart(); });
+  segment("showSeg", "show", v => { S.show = v; drawChart(); });
+  segment("tsvSeg",  "tu",   v => { S.tsvUnit = v; buildTsv(); });
+
+  $("tsvFmt").addEventListener("change", e => { S.tsvFmt = e.target.value; renderTsvNote(); buildTsv(); });
+  $("tsvMap").addEventListener("change", e => { S.tsvMap = e.target.value; buildTsv(); });
+  onCommit($("tsvDrop"), e => {
+    const v = parseFloat(e.target.value);
+    S.tsvDrop = isFinite(v) && v >= 0 ? v : 0;
+    e.target.value = S.tsvDrop;
+    buildTsv();
+  });
+  segment("tsvDropSeg", "dm", v => {
+    S.tsvDropMode = v;
+    // the two scales are nowhere near each other, so carry a sane number across
+    S.tsvDrop = v === "pct" ? 30 : 800;
+    $("tsvDrop").value = S.tsvDrop;
+    $("tsvDrop").max = v === "pct" ? 95 : 6000;
+    $("tsvDrop").step = v === "pct" ? 5 : 50;
+    buildTsv();
+  });
+  renderTsvNote();
+
+  $("btnFill").addEventListener("click", () => {
+    buildTables(); writeInputs(); refreshCells(); flash($("btnFill"), "Built");
+  });
+
+  $("btnCopy").addEventListener("click", async () => {
+    buildTsv();
+    try {
+      await navigator.clipboard.writeText($("tsv").value);
+      flash($("btnCopy"), "Copied");
+    } catch (err) {
+      $("tsv").select();
+      flash($("btnCopy"), "Press Ctrl+C");
+    }
+  });
+
+  $("btnPaste").addEventListener("click", loadTsv);
+
+  $("btnWotAll").addEventListener("click", () => {
+    const rpm = parseFloat($("wotAll").value);
+    if (!isFinite(rpm) || rpm <= 0) { flash($("btnWotAll"), "Need an rpm"); return; }
+    for (let j = 0; j < shiftCount(); j++) setWot(j, "rpm", rpm);
+    refreshWot(); drawChart();
+    flash($("btnWotAll"), "Applied");
+  });
+
+  // the throttle-indexed table has its own 100% column; this drops the WOT points into it
+  $("btnWotPush").addEventListener("click", () => {
+    const last = tpsAxis().length - 1;
+    for (let j = 0; j < shiftCount(); j++) S.up[j][last] = S.wot[j];
+    writeInputs(); refreshCells();
+    flash($("btnWotPush"), "Pushed");
+  });
+
+  // rotating the phone changes which chart shape is right
+  let wide = isNarrow(), t = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(t);
+    t = setTimeout(() => { if (isNarrow() !== wide) { wide = isNarrow(); drawChart(); } }, 150);
+  });
+
+}
+
+init();
+})();
+</script>
+</body>
+</html>

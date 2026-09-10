@@ -1,0 +1,1852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fuel Pump and Regulator Finder — The EFI Store</title>
+<meta name="description" content="Work out the flow your combo needs, then see which pumps cover it.">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EFI Tools">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Assistant:wght@400;600;700&display=swap">
+<style>:root{--color-background:#050505;--color-foreground:#ffffff;--font-heading--family:Anton, sans-serif;--font-heading--style:normal;--font-heading--weight:400;--font-primary--family:Assistant, sans-serif;--font-primary--style:normal;--font-primary--weight:400;--page-margin:20px;--page-width:110rem;--partmash-black:#050505;--partmash-border:#2a2a2a;--partmash-dark:#151515;--partmash-dark-2:#1f1f1f;--partmash-red:#d40000;--partmash-red-bright:#ff1a1a;--partmash-red-dark:#990000;--partmash-silver:#c9c9c9;--partmash-silver-light:#e8e8e8;--partmash-white:#ffffff;--style-border-radius-inputs:4px;}</style>
+<style>/** Critical CSS for the theme. This file is included on every page. */
+
+/* Reset styles inspired by https://www.joshwcomeau.com/css/custom-css-reset/ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-height: 100svh;
+}
+
+html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {
+  overflow: hidden;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  border-radius: var(--style-border-radius-inputs);
+}
+
+select {
+  background-color: var(--color-background);
+  color: currentcolor;
+}
+
+dialog {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+p {
+  text-wrap: pretty;
+}
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+p:empty {
+  display: none;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):first-child,
+:empty:first-child + :where(p, h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 0;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):last-child,
+:where(p, h1, h2, h3, h4, h5, h6) + :has(+ :empty:last-child) {
+  margin-block-end: 0;
+}
+
+/** Theme styles below */
+body {
+  font-family: var(--font-primary--family);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/** Section layout utilities */
+
+/**
+ * Setup a grid that enables both full-width and constrained layouts
+ * depending on the class of the child elements.
+ *
+ * By default, a minimum content margin is set on the left and right
+ * sides of the section and the content is centered in the viewport to
+ * not exceed the maximum page width.
+ *
+ * When a child element is given the `full-width` class, it will span
+ * the entire viewport.
+ */
+.shopify-section {
+  --content-width: min(
+    calc(var(--page-width) - var(--page-margin) * 2),
+    calc(100% - var(--page-margin) * 2)
+  );
+  --content-margin: minmax(var(--page-margin), 1fr);
+  --content-grid: var(--content-margin) var(--content-width) var(--content-margin);
+
+  /* This is required to make <img> elements work as background images */
+  position: relative;
+  grid-template-columns: var(--content-grid);
+  display: grid;
+  width: 100%;
+}
+
+/* Child elements, by default, are constrained to the central column of the grid. */
+.shopify-section > * {
+  grid-column: 2;
+}
+
+/* Child elements that use the full-width utility class span the entire viewport. */
+.shopify-section > .full-width {
+  grid-column: 1 / -1;
+}
+
+/* PartMash / The EFI Store custom theme styles */
+
+:root {
+  --partmash-black: #050505;
+  --partmash-dark: #151515;
+  --partmash-dark-2: #1f1f1f;
+  --partmash-red: #d40000;
+  --partmash-red-bright: #ff1a1a;
+  --partmash-red-dark: #990000;
+  --partmash-silver: #c9c9c9;
+  --partmash-silver-light: #e8e8e8;
+  --partmash-white: #ffffff;
+  --partmash-border: #2a2a2a;
+}
+
+body {
+  background-color: var(--partmash-black);
+  color: var(--partmash-white);
+}
+
+a {
+  color: inherit;
+}
+
+/* Headings use the bold condensed display font, uppercase, tight tracking */
+h1, h2, h3, h4, h5, h6,
+.heading-font {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.75rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.95rem;
+  border-radius: 3px;
+  border: 2px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn--primary {
+  background-color: var(--partmash-red);
+  color: var(--partmash-white);
+  border-color: var(--partmash-red);
+}
+.btn--primary:hover {
+  background-color: var(--partmash-red-bright);
+  border-color: var(--partmash-red-bright);
+}
+.btn--outline {
+  background-color: transparent;
+  color: var(--partmash-white);
+  border-color: var(--partmash-white);
+}
+.btn--outline:hover {
+  background-color: var(--partmash-white);
+  color: var(--partmash-black);
+}
+
+/* ---------- Section heading with red tick mark ---------- */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 1.35rem;
+  margin: 0 0 1.25rem;
+}
+.section-heading::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 1.4rem;
+  background-color: var(--partmash-red);
+  border-radius: 1px;
+}
+
+/* ---------- Trust badge strips ---------- */
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+.trust-strip--band {
+  background-color: var(--partmash-red);
+  padding: 0.9rem var(--page-margin);
+}
+.trust-strip__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+}
+.trust-strip__item svg,
+.trust-strip__item .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+.trust-strip__item-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: block;
+}
+.trust-strip__item-subtitle {
+  opacity: 0.85;
+  font-size: 0.8rem;
+  display: block;
+}
+.trust-strip--band .trust-strip__item {
+  color: var(--partmash-white);
+}
+.trust-strip--footer .trust-strip__item {
+  color: var(--partmash-silver-light);
+}
+.trust-strip--footer {
+  padding: 2rem 0;
+  border-top: 1px solid var(--partmash-border);
+}
+
+/* ---------- Tile grid (brands / categories) ---------- */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
+}
+.tile {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  padding: 1.1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  min-height: 110px;
+}
+.tile:hover {
+  border-color: var(--partmash-red);
+  transform: translateY(-2px);
+}
+.tile__icon {
+  width: 100%;
+  max-width: 130px;
+  max-height: 3.5rem;
+  object-fit: contain;
+}
+.tile__label {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.tile--brand .tile__label {
+  color: var(--partmash-red-bright);
+}
+
+/* Category tiles: icon + label stacked */
+.tile--category {
+  min-height: 130px;
+  gap: 0.5rem;
+}
+.tile__icon-wrap {
+  width: 3.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--partmash-silver-light);
+  transition: color 0.15s ease;
+}
+.tile__icon-wrap svg {
+  width: 100%;
+  height: 100%;
+}
+.tile--category:hover .tile__icon-wrap {
+  color: var(--partmash-red-bright);
+}
+.tile--category .tile__label {
+  color: var(--partmash-white);
+  font-size: 0.72rem;
+}
+
+/* ---------- Product cards ---------- */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+.product-card {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease;
+}
+.product-card:hover {
+  border-color: var(--partmash-red);
+}
+.product-card__image {
+  background-color: var(--partmash-white);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.product-card__body {
+  padding: 0.85rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-grow: 1;
+}
+.product-card__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.product-card__part {
+  font-size: 0.75rem;
+  color: var(--partmash-silver);
+}
+.product-card__price {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  color: var(--partmash-white);
+  font-size: 1.05rem;
+  margin-top: auto;
+}
+.product-card__cta {
+  margin-top: 0.5rem;
+}
+.product-grid__empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--partmash-silver);
+  border: 1px dashed var(--partmash-border);
+  border-radius: 6px;
+  grid-column: 1 / -1;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  background-color: var(--partmash-dark);
+  min-height: 420px;
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 2.5rem var(--page-margin);
+  max-width: 640px;
+}
+.hero__title {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  margin: 0 0 0.75rem;
+}
+.hero__title .accent {
+  color: var(--partmash-red-bright);
+  display: block;
+}
+.hero__subtitle {
+  font-size: 1.05rem;
+  color: var(--partmash-silver-light);
+  margin: 0 0 1.5rem;
+  max-width: 480px;
+}
+.hero__ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Section spacing ---------- */
+.section-padded {
+  padding: 2.5rem 0;
+}
+</style>
+<style>
+  .pumpcalc__banner {
+    background-color: #151515;
+    border-bottom: 1px solid var(--partmash-border);
+    padding: 2.5rem 0;
+  }
+  .pumpcalc__banner-inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+  .pumpcalc__crumb {
+    color: var(--partmash-silver);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+  .pumpcalc__crumb a {
+    color: var(--partmash-silver);
+  }
+  .pumpcalc__title {
+    margin-bottom: 0.5rem;
+  }
+  .pumpcalc__tagline {
+    color: var(--partmash-red-bright);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  .pumpcalc__subtitle {
+    color: var(--partmash-silver-light);
+    max-width: 720px;
+    line-height: 1.6;
+  }
+  .pumpcalc__subtitle a {
+    color: var(--partmash-red-bright);
+  }
+
+  .pumpcalc__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .pumpcalc__form,
+  .pumpcalc__results {
+    min-width: 0;
+  }
+
+  .pumpcalc__field-block {
+    margin-bottom: 1.75rem;
+  }
+  .pumpcalc__block-heading {
+    color: var(--partmash-red-bright);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 1rem;
+  }
+  .pumpcalc__optional {
+    color: var(--partmash-silver);
+    font-size: 0.75rem;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .pumpcalc__row-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+  .pumpcalc__row-pair > .pumpcalc__row {
+    min-width: 0;
+  }
+  .pumpcalc__row {
+    margin-bottom: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .pumpcalc__row input,
+  .pumpcalc__row select {
+    min-width: 0;
+    width: 100%;
+  }
+  .pumpcalc__row label {
+    color: var(--partmash-white);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.4rem;
+  }
+  .pumpcalc__row input,
+  .pumpcalc__row select {
+    background-color: #b7b7b8;
+    border: 1px solid var(--partmash-border);
+    border-radius: 4px;
+    color: #1a1a1a;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .pumpcalc__row input:focus,
+  .pumpcalc__row select:focus {
+    outline: none;
+    border-color: var(--partmash-red-bright);
+  }
+  .pumpcalc__hint {
+    color: var(--partmash-silver);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: -0.5rem 0 1rem;
+  }
+
+  .pumpcalc__toggle {
+    display: inline-flex;
+    border: 1px solid var(--partmash-border);
+    border-radius: 4px;
+    overflow: hidden;
+    width: fit-content;
+    margin-bottom: 1.1rem;
+    flex-wrap: wrap;
+  }
+  .pumpcalc__toggle-btn {
+    background: #151515;
+    color: var(--partmash-silver-light);
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .pumpcalc__toggle-btn.is-active {
+    background: var(--partmash-red);
+    color: var(--partmash-white);
+  }
+
+  .pumpcalc__advanced {
+    border-top: 1px solid var(--partmash-border);
+    padding-top: 1rem;
+  }
+  .pumpcalc__advanced summary {
+    color: var(--partmash-silver-light);
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 1rem;
+  }
+
+  .pumpcalc__results {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .pumpcalc__result-card {
+    background-color: #151515;
+    border: 1px solid var(--partmash-border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+  }
+  .pumpcalc__result-card--headline {
+    border-color: var(--partmash-red);
+    text-align: center;
+  }
+  .pumpcalc__result-label {
+    color: var(--partmash-silver);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+  .pumpcalc__result-value {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.25rem;
+    color: var(--partmash-red-bright);
+    margin: 0;
+  }
+  .pumpcalc__result-value--small {
+    font-size: 1.15rem;
+    color: var(--partmash-white);
+  }
+  .pumpcalc__result-sub {
+    color: var(--partmash-silver-light);
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+  }
+  .pumpcalc__verdict {
+    font-weight: 700;
+  }
+  .pumpcalc__verdict--ok { color: #6fd66f; }
+  .pumpcalc__verdict--warn { color: #ffb020; }
+  .pumpcalc__verdict--fail { color: var(--partmash-red-bright); }
+
+  .pumpcalc__chart-caption {
+    color: var(--partmash-silver);
+    font-size: 0.78rem;
+    margin-bottom: 0.75rem;
+  }
+  .pumpcalc__table-wrap {
+    overflow-x: auto;
+  }
+  .pumpcalc__table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.82rem;
+  }
+  .pumpcalc__table th,
+  .pumpcalc__table td {
+    padding: 0.5rem 0.6rem;
+    text-align: right;
+    border-bottom: 1px solid var(--partmash-border);
+    color: var(--partmash-silver-light);
+    white-space: nowrap;
+  }
+  .pumpcalc__table th:first-child,
+  .pumpcalc__table td:first-child {
+    text-align: left;
+    color: var(--partmash-white);
+  }
+  .pumpcalc__table tr.is-selected td {
+    color: var(--partmash-red-bright);
+    font-weight: 700;
+  }
+
+  .pumpcalc__product-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+  }
+  .pumpcalc__product-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--partmash-border);
+    color: var(--partmash-silver-light);
+    font-size: 0.9rem;
+  }
+  .pumpcalc__product-list a {
+    color: var(--partmash-white);
+    text-decoration: none;
+  }
+  .pumpcalc__product-list a:hover {
+    color: var(--partmash-red-bright);
+  }
+  .pumpcalc__no-match {
+    color: var(--partmash-silver-light);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  .pumpcalc__caveat {
+    color: var(--partmash-silver);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: -0.5rem 0 1rem;
+  }
+  .pumpcalc__cta-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  /* --- drive-type picker (step 2) --- */
+  .pumpcalc__typegrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.4rem;
+  }
+  .pumpcalc__type {
+    padding: 0.55rem 0.5rem;
+    background: var(--partmash-black);
+    border: 1px solid var(--partmash-border);
+    color: var(--partmash-silver-light);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .pumpcalc__type:hover { color: var(--partmash-white); border-color: var(--partmash-silver); }
+  .pumpcalc__type.is-active {
+    border-color: var(--partmash-red-bright);
+    color: var(--partmash-white);
+    background: rgba(200, 16, 46, 0.12);
+  }
+  .pumpcalc__type:focus-visible { outline: 2px solid var(--partmash-red-bright); outline-offset: 2px; }
+
+  .pumpcalc__count { color: var(--partmash-silver); font-weight: 400; }
+
+  /* --- result rows: spec on the left, price and cart on the right --- */
+  .pumpcalc__product-list--rows { list-style: none; margin: 0 0 1rem; padding: 0; }
+  .pumpcalc__prow {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--partmash-border);
+  }
+  .pumpcalc__prow-main { min-width: 0; flex: 1 1 auto; }
+  .pumpcalc__prow-main a {
+    color: var(--partmash-white);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.35;
+    display: block;
+  }
+  .pumpcalc__prow-main a:hover { color: var(--partmash-red-bright); }
+  .pumpcalc__prow-spec {
+    color: var(--partmash-silver-light);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: 0.2rem 0 0;
+  }
+  .pumpcalc__prow-note { font-size: 0.74rem; margin: 0.2rem 0 0; color: var(--partmash-silver); }
+  .pumpcalc__prow-note--ok { color: #4caf7d; }
+  .pumpcalc__prow-note--warn { color: #d9a13b; }
+  .pumpcalc__prow-buy {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+  }
+  .pumpcalc__price {
+    color: var(--partmash-white);
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .pumpcalc__buy { margin: 0; }
+  .pumpcalc__add { padding: 0.4rem 0.75rem; font-size: 0.74rem; white-space: nowrap; }
+
+  @media (max-width: 600px) {
+    .pumpcalc__prow { flex-direction: column; gap: 0.5rem; }
+    .pumpcalc__prow-buy { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
+  }
+
+  @media (max-width: 900px) {
+    .pumpcalc__grid {
+      grid-template-columns: 1fr;
+    }
+    .pumpcalc__results {
+      position: static;
+    }
+  }
+  @media (max-width: 600px) {
+    .pumpcalc__row-pair {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* ⛔ iOS Safari zooms the whole page when a focused input is under 16px.
+     Same specificity as the .pumpcalc__row input rule above (0,1,1) and placed LAST in this
+     stylesheet, so it wins on source order rather than needing !important. */
+  @media (max-width: 900px) {
+    .pumpcalc__row input,
+    .pumpcalc__row select {
+      font-size: 16px;
+    }
+  }
+
+  /* ⛔ .pumpcalc__hint carries margin-top: -0.5rem, which suits a hint tucked under an input
+     row but jams this one against the drive-type buttons so it reads as part of them.
+     Same specificity (0,1,0) and later in the sheet, so it wins on source order. */
+  .pumpcalc__hint--below {
+    margin-top: 0.75rem;
+  }
+
+  .pumpcalc__tnote {
+    color: var(--partmash-silver);
+    font-size: 0.72rem;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .pumpcalc__chart {
+    width: 100%;
+    height: auto;
+    background: #0c0c0c;
+    border-radius: 4px;
+  }
+  .pumpcalc__chartkey {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.6rem;
+  }
+  .pumpcalc__keyitem {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--partmash-silver-light);
+    font-size: 0.74rem;
+    line-height: 1.35;
+  }
+  .pumpcalc__keyitem i {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  /* ⛔⛔ `.pumpcalc__row { display: flex }` is an AUTHOR rule and beats the browser's
+     `[hidden] { display: none }`, which is only a UA-stylesheet default. So the hidden
+     attribute did nothing on these rows and the boost box stayed on screen under Nitrous.
+     Specificity here is (0,2,0), which beats the (0,1,0) class rule. */
+  .pumpcalc__row[hidden],
+  .pumpcalc__hint[hidden] {
+    display: none;
+  }
+
+  /* Brian asked for clearer separation between the numbered blocks, so each one after the first
+     gets a rule and real breathing room above its heading. .pumpcalc__field-block only carried
+     margin-bottom, which left a heading sitting close under the previous block's controls. */
+  .pumpcalc__field-block + .pumpcalc__field-block {
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--partmash-border);
+  }
+
+  /* The two product lists are the payoff of the tool, not reference material, so their headings
+     read as headings. Same specificity as .pumpcalc__result-label (0,1,0) and later in the sheet,
+     so it wins on source order. The count stays light so it reads as secondary to the words. */
+  .pumpcalc__result-label--major {
+    color: var(--partmash-white);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.85rem;
+  }
+  .pumpcalc__result-label--major .pumpcalc__count {
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
+
+.efinav{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  padding:.6rem var(--page-margin);background:#0d0d0d;
+  border-bottom:2px solid var(--partmash-red);position:sticky;top:0;z-index:50}
+.efinav__home img{width:140px;height:auto;display:block}
+.efinav__links{display:flex;gap:.35rem;flex-wrap:wrap;flex:1 1 auto}
+.efinav__links a{color:var(--partmash-silver-light);text-decoration:none;font-size:.8rem;
+  font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:.45rem .7rem;
+  border:1px solid var(--partmash-border);border-radius:999px}
+.efinav__links a:hover{color:var(--partmash-red-bright);border-color:var(--partmash-red)}
+.efinav__call{color:var(--partmash-red-bright);font-weight:700;text-decoration:none;
+  font-size:1rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:600px){
+  .efinav{gap:.6rem;padding:.55rem 12px}
+  .efinav__home img{width:110px}
+  .efinav__links a{font-size:.75rem;padding:.5rem .6rem}
+}
+</style>
+<style>
+  .efitoolfoot {
+    background-color: #0d0d0d;
+    border-top: 2px solid var(--partmash-red);
+    margin-top: 2rem;
+  }
+  .efitoolfoot__inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: 2rem var(--page-margin) 2.25rem;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1.2fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .efitoolfoot__logo {
+    width: 210px;
+    height: auto;
+    display: block;
+    margin-bottom: .6rem;
+  }
+  .efitoolfoot__tag {
+    color: var(--partmash-silver-light);
+    font-size: .78rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin: 0 0 .6rem;
+  }
+  .efitoolfoot__blurb {
+    color: var(--partmash-silver);
+    font-size: .82rem;
+    line-height: 1.6;
+    margin: 0 0 .7rem;
+    max-width: 42ch;
+  }
+  .efitoolfoot__k {
+    color: var(--partmash-white);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin: 0 0 .55rem;
+  }
+  .efitoolfoot__phone {
+    display: block;
+    color: var(--partmash-red-bright);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: .5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .efitoolfoot__phone:hover { color: var(--partmash-white); }
+  .efitoolfoot__link {
+    display: block;
+    color: var(--partmash-silver-light);
+    font-size: .85rem;
+    text-decoration: none;
+    padding: .18rem 0;
+  }
+  .efitoolfoot__link:hover { color: var(--partmash-red-bright); }
+  .efitoolfoot__how {
+    border: 1px solid var(--partmash-border);
+    border-radius: 3px;
+    margin-bottom: .45rem;
+    background: #121212;
+  }
+  .efitoolfoot__how summary {
+    cursor: pointer;
+    padding: .5rem .7rem;
+    color: var(--partmash-silver-light);
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .efitoolfoot__how summary:hover { color: var(--partmash-white); }
+  .efitoolfoot__how ol {
+    margin: 0;
+    padding: 0 .7rem .7rem 1.9rem;
+    color: var(--partmash-silver);
+    font-size: .8rem;
+    line-height: 1.65;
+  }
+  .efitoolfoot__how b { color: var(--partmash-silver-light); }
+  .efitoolfoot__done {
+    color: #5FBF6A;
+    font-size: .85rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .efitoolfoot__inner { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 1.5rem; }
+    .efitoolfoot__logo { width: 180px; }
+    /* a phone number is for tapping, so give it a proper target */
+    .efitoolfoot__phone { font-size: 1.45rem; padding: .2rem 0; }
+    .efitoolfoot__link { padding: .45rem 0; }
+    .efitoolfoot__how summary { padding: .7rem; }
+  }
+</style>
+</head>
+<body>
+<nav class="efinav">
+  <a class="efinav__home" href="./index.html">
+    <img src="./assets/efi-store-logo.png" alt="The EFI Store" width="1130" height="290">
+  </a>
+  <div class="efinav__links">
+    <a href="./injector.html">Injectors</a>
+    <a href="./pump.html">Fuel Pump</a>
+    <a href="./shift.html">Shift Table</a>
+  </div>
+  <a class="efinav__call" href="tel:9287066112">928-706-6112</a>
+</nav>
+<div class="pumpcalc full-width">
+  <div class="pumpcalc__banner">
+    <div class="pumpcalc__banner-inner">
+      <p class="pumpcalc__crumb">
+        <a href="https://www.theefistore.com/">Home</a>
+        <span>/</span>
+        <a href="./index.html">Tech Center</a>
+        <span>/</span>
+        Fuel Pump and Regulator Finder
+      </p>
+      <h1 class="pumpcalc__title">Fuel Pump and Regulator Finder</h1>
+      <p class="pumpcalc__tagline">What is the best pump for me?</p>
+      <p class="pumpcalc__subtitle">
+        Tell us the power, the fuel and how you want to drive the pump. We work out the flow your
+        combo needs and show every pump we carry that covers it.
+        This is a planning tool, not a tune &mdash;
+        <a href="https://www.theefistore.com/pages/get-an-appointment">book a session</a> or
+        <a href="tel:9287066112">call 928-706-6112</a> to get it dialed in.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-padded">
+    <div class="pumpcalc__grid">
+
+      <form class="pumpcalc__form" id="PumpCalcForm">
+
+        
+        <div class="pumpcalc__field-block">
+          <h2 class="pumpcalc__block-heading">1 &middot; Brand <span class="pumpcalc__optional">(optional)</span></h2>
+          <div class="pumpcalc__row">
+            <label for="PumpBrand">Brand</label>
+            <select id="PumpBrand"><option value="">-- any brand --</option></select>
+          </div>
+          <p class="pumpcalc__hint" id="PumpCatalogHint"></p>
+        </div>
+        
+        <div class="pumpcalc__field-block">
+          <h2 class="pumpcalc__block-heading">2 &middot; How It Is Driven</h2>
+          <div class="pumpcalc__typegrid" id="PumpTypeGrid">
+            <button type="button" class="pumpcalc__type is-active" data-type="">Any</button>
+            <button type="button" class="pumpcalc__type" data-type="belt" title="Driven by a belt off a pulley and bracket on the side of the engine.">Belt Drive</button>
+            <button type="button" class="pumpcalc__type" data-type="cam" title="Driven off the cam through a hex shaft.">Cam Drive</button>
+            <button type="button" class="pumpcalc__type" data-type="inline" title="Electric pump mounted outside the tank.">Electric In-Line</button>
+            <button type="button" class="pumpcalc__type" data-type="intank" title="Electric pump inside the tank, retrofit or universal.">Electric In-Tank</button>
+          </div>
+          <p class="pumpcalc__hint pumpcalc__hint--below" id="PumpTypeNote">Most hex-drive pumps run either off the cam or off a belt, so they show under both.</p>
+        </div>
+
+        
+        <div class="pumpcalc__field-block">
+          <h2 class="pumpcalc__block-heading">3 &middot; What Your Engine Needs</h2>
+
+          <div class="pumpcalc__row">
+            <label for="PumpHp">Target Horsepower</label>
+            <input type="number" id="PumpHp" value="500" min="50" max="6000" step="10">
+          </div>
+
+          <div class="pumpcalc__row">
+            <label for="PumpFuel">Fuel</label>
+            <select id="PumpFuel">
+              <option value="gasoline" selected>Gasoline (Pump)</option>
+              <option value="e85">E85</option>
+              <option value="e100">E100 (Pure Ethanol)</option>
+              <option value="methanol">Methanol</option>
+            </select>
+          </div>
+          <p class="pumpcalc__hint" id="PumpFuelNote"></p>
+          <div class="pumpcalc__row">
+            <label>Fuel System</label>
+            <div class="pumpcalc__toggle" id="PumpSystemToggle">
+              <button type="button" class="pumpcalc__toggle-btn is-active" data-sys="efi">EFI</button>
+              <button type="button" class="pumpcalc__toggle-btn" data-sys="carb">Carbureted</button>
+            </div>
+          </div>
+          <div class="pumpcalc__row">
+            <label for="PumpFuelPressure">Base Fuel Pressure (psi)</label>
+            <input type="number" id="PumpFuelPressure" value="43.5" min="5" max="150" step="0.5">
+          </div>
+          <p class="pumpcalc__hint" id="PumpPsiNote">Pressure with no boost on it. Higher pressure asks more of the pump &mdash; that is already in the flow figure.</p>
+
+          <div class="pumpcalc__row">
+            <label>Induction</label>
+            <div class="pumpcalc__toggle" id="PumpAspirationToggle">
+              <button type="button" class="pumpcalc__toggle-btn is-active" data-mode="na" title="No boost, no nitrous.">N/A</button>
+              <button type="button" class="pumpcalc__toggle-btn" data-mode="nitrous" title="Nitrous adds a fuel spike the pump has to cover too.">Nitrous</button>
+              <button type="button" class="pumpcalc__toggle-btn" data-mode="forced" title="Turbo or supercharged.">Forced Induction</button>
+              <button type="button" class="pumpcalc__toggle-btn" data-mode="both" title="Boost and nitrous together. Sizes the pump for the boosted engine plus the shot on top.">Both</button>
+            </div>
+          </div>
+
+
+          <div class="pumpcalc__row" id="PumpNitrousRow" hidden>
+            <label for="PumpNitrousHp">Nitrous Horsepower (shot size)</label>
+            <input type="number" id="PumpNitrousHp" value="150" min="0" max="2000" step="25">
+          </div>
+
+          <div class="pumpcalc__row" id="PumpNosKitRow" hidden>
+            <label>Nitrous System</label>
+            <div class="pumpcalc__toggle" id="PumpNosKitToggle">
+              <button type="button" class="pumpcalc__toggle-btn is-active" data-kit="dry" title="Nitrous only through the plate or nozzle. The extra fuel comes from the engine's injectors, so your main pump feeds it.">Dry</button>
+              <button type="button" class="pumpcalc__toggle-btn" data-kit="wet" title="The kit sprays its own fuel alongside the nitrous.">Wet</button>
+            </div>
+          </div>
+
+          <div class="pumpcalc__row" id="PumpNosSupplyRow" hidden>
+            <label>Nitrous Fuel Supply</label>
+            <div class="pumpcalc__toggle" id="PumpNosSupplyToggle">
+              <button type="button" class="pumpcalc__toggle-btn is-active" data-supply="shared" title="The wet kit draws from the same fuel system as the engine.">Same pump as engine</button>
+              <button type="button" class="pumpcalc__toggle-btn" data-supply="standalone" title="The kit has its own cell, pump and regulator.">Standalone nitrous system</button>
+            </div>
+          </div>
+          <p class="pumpcalc__hint pumpcalc__hint--below" id="PumpNitrousNote" hidden></p>
+
+          <div class="pumpcalc__row" id="PumpBoostRow" hidden>
+            <label for="PumpBoostPsi">Target Boost (psi)</label>
+            <input type="number" id="PumpBoostPsi" value="10" min="0" max="60" step="0.5">
+          </div>
+          <p class="pumpcalc__hint pumpcalc__hint--below" id="PumpBoostNote" hidden></p>
+
+        </div>
+
+        <details class="pumpcalc__advanced">
+          <summary>Advanced settings</summary>
+          <div class="pumpcalc__row">
+            <label for="PumpSafetyMargin">Safety Margin (%)</label>
+            <input type="number" id="PumpSafetyMargin" value="10" min="0" max="30" step="1">
+          </div>
+          <p class="pumpcalc__hint">Headroom so the pump is not working flat-out at your target power. 10% is the industry default.</p>
+        </details>
+      </form>
+
+      <div class="pumpcalc__results" id="PumpResults">
+        <div class="pumpcalc__result-card pumpcalc__result-card--headline">
+          <p class="pumpcalc__result-label">Minimum Pump Flow Needed</p>
+          <p class="pumpcalc__result-value" id="PumpHeadline">&mdash;</p>
+          <p class="pumpcalc__result-sub" id="PumpHeadlineSub"></p>
+        </div>
+
+        <div class="pumpcalc__result-card">
+          <p class="pumpcalc__result-label">By Induction Type at This Horsepower</p>
+          <p class="pumpcalc__chart-caption">Same horsepower, fuel, pressure and margin &mdash; only the induction type changes.</p>
+          <div class="pumpcalc__table-wrap">
+            <table class="pumpcalc__table" id="PumpAspirationTable"></table>
+          </div>
+        </div>
+        <div class="pumpcalc__result-card">
+          <p class="pumpcalc__result-label">Flow Needed vs What These Pumps Deliver</p>
+          <p class="pumpcalc__chart-caption">The rising line is the fuel your combo needs as power climbs. Each flat line is a pump &mdash; where it crosses is the horsepower it runs out at.</p>
+          <svg id="PumpChart" viewBox="0 0 600 280" class="pumpcalc__chart" preserveAspectRatio="none"></svg>
+          <div id="PumpChartKey" class="pumpcalc__chartkey"></div>
+        </div>
+
+        <div class="pumpcalc__result-card" id="PumpProductsCard">
+          <p class="pumpcalc__result-label pumpcalc__result-label--major">Pumps That Cover It <span class="pumpcalc__count" id="PumpCount"></span></p>
+          <div id="PumpProductsList"></div>
+        </div>
+
+
+        <div class="pumpcalc__result-card" id="RegProductsCard">
+          <p class="pumpcalc__result-label pumpcalc__result-label--major">Regulators for This Pressure <span class="pumpcalc__count" id="RegCount"></span></p>
+          <div id="RegProductsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<aside class="efitoolfoot full-width">
+  <div class="efitoolfoot__inner">
+
+    <div class="efitoolfoot__brand">
+      <img class="efitoolfoot__logo"
+           src="./assets/efi-store-logo.png"
+           alt="The EFI Store" width="1130" height="290" loading="lazy">
+      <p class="efitoolfoot__tag">Product &middot; Support &middot; Tuning</p>
+      <p class="efitoolfoot__blurb">
+        Built from real tuning experience. This is a planning tool &mdash; when you want it
+        dialed in on the dyno, that is what we do.
+      </p>
+    </div>
+
+    <div class="efitoolfoot__contact">
+      <p class="efitoolfoot__k">Talk to a tuner</p>
+      <a class="efitoolfoot__phone" href="tel:9287066112">928-706-6112</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/">theefistore.com</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/pages/get-an-appointment">Book a tuning session</a>
+      <a class="efitoolfoot__link" href="./index.html">More tools in the Tech Center</a>
+    </div>
+
+    <div class="efitoolfoot__install" id="EfiInstall">
+      <p class="efitoolfoot__k">Keep this on your phone</p>
+      <p class="efitoolfoot__blurb">
+        Save it to your home screen and it opens like an app &mdash; no app store, and it is
+        always the current version.
+      </p>
+      <details class="efitoolfoot__how">
+        <summary>iPhone &amp; iPad</summary>
+        <ol>
+          <li>Tap <b>Share</b> in Safari &mdash; the square with the arrow.</li>
+          <li>Scroll and tap <b>Add to Home Screen</b>.</li>
+          <li>Name it and tap <b>Add</b>.</li>
+        </ol>
+      </details>
+      <details class="efitoolfoot__how">
+        <summary>Android</summary>
+        <ol>
+          <li>Tap the <b>&#8942;</b> menu in Chrome.</li>
+          <li>Tap <b>Add to Home screen</b>.</li>
+        </ol>
+      </details>
+      <p class="efitoolfoot__done" id="EfiInstalled" hidden>
+        Running from your home screen. &#10003;
+      </p>
+    </div>
+
+  </div>
+</aside>
+
+<script>
+  (function () {
+    // already saved to the home screen? then the how-to is just noise
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                     || window.navigator.standalone === true;
+    if (!standalone) return;
+    var box = document.getElementById('EfiInstall');
+    var done = document.getElementById('EfiInstalled');
+    if (!box || !done) return;
+    box.querySelectorAll('.efitoolfoot__how, .efitoolfoot__blurb').forEach(function (el) { el.hidden = true; });
+    done.hidden = false;
+  })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js'); });
+}
+</script>
+<script>
+/* Standalone bridge - only the app build needs this, the store page never does.
+   ⛔ Catalog JSON carries STORE-RELATIVE urls ("/products/...") and the buy forms post to
+      "/cart/add". Off theefistore.com both 404, and the JSON is shipped verbatim so a
+      build-time rewrite would not catch the links the tools render from it. Handled at
+      click time instead, which also covers anything added to the catalogs later. */
+(function () {
+  var STORE = "https://www.theefistore.com";
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (!a) return;
+    var h = a.getAttribute("href");
+    if (!h || h.charAt(0) !== "/" || h.charAt(1) === "/") return;   /* "//host" is absolute */
+    e.preventDefault();
+    window.location.href = STORE + h;
+  }, true);
+  /* ⭐ TESTED, not assumed: a cross-origin POST to the store's own /cart/add adds the item
+     under the store's cookie and lands on /cart. The documented /cart/<id>:<qty> permalink
+     was tried first and rejected - it runs straight to checkout, and this store's checkout
+     bounces to a Shopify sign-in, so the customer meets a login instead of their cart. */
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f || f.getAttribute("action") !== "/cart/add") return;
+    e.preventDefault();
+    var g = document.createElement("form");
+    g.method = "post";
+    g.action = STORE + "/cart/add";
+    /* ⛔ NOT target="_blank" - a popup-blocked submit is a dead Add to Cart button with no
+       error. A same-tab submit always fires, and an out-of-scope navigation from a standalone
+       PWA opens the browser (Android custom tab / iOS Safari) with the app left intact. */
+    g.enctype = "multipart/form-data";
+    Array.prototype.forEach.call(f.querySelectorAll("[name]"), function (el) {
+      var i = document.createElement("input");
+      i.type = "hidden"; i.name = el.name; i.value = el.value;
+      g.appendChild(i);
+    });
+    document.body.appendChild(g);
+    g.submit();
+    g.parentNode.removeChild(g);
+  }, true);
+})();
+</script><script>
+(function () {
+  'use strict';
+  var CATALOG_URL = "./assets/pump-catalog.json";
+  var PUMPS = [], REGS = [], READY = false;
+
+  // Fuel-weight and per-HP demand factors verified live against fuelab.com's public fuel pump
+  // calculator (view-source, Aug 2026). Aeromotive's own "Pump Finder" does no horsepower math
+  // at all - it is a category filter. E100 factors are scaled by fuel heating value
+  // (gasoline ~18,500 Btu/lb, ethanol ~11,500), a method that reproduces Fuelab's published
+  // E85 and methanol numbers within ~5%.
+  // ⭐ Cross-check: E85 na 0.7 / gasoline na 0.5 = 1.40x the fuel mass. Aeromotive's own
+  //    published pump ratings give E85 = 0.700 x gas (n=78, 70 of them exactly 0.700),
+  //    i.e. 1.43x. Two independent sources agreeing within 2%.
+  var FUEL_TYPES = {
+    gasoline: { label: 'Gasoline (Pump)', fuelWeightLbGal: 6,   factors: { na: 0.5,  nitrous: 0.6,  forced: 0.7  } },
+    e85:      { label: 'E85',             fuelWeightLbGal: 6.5, factors: { na: 0.7,  nitrous: 0.8,  forced: 0.95 } },
+    e100:     { label: 'E100',            fuelWeightLbGal: 6.5, factors: { na: 0.80, nitrous: 0.97, forced: 1.13 } },
+    methanol: { label: 'Methanol',        fuelWeightLbGal: 6.5, factors: { na: 1.1,  nitrous: 1.1,  forced: 1.8  } }
+  };
+  var ASP_LABEL = { na: 'Naturally Aspirated', nitrous: 'Nitrous', forced: 'Forced Induction', both: 'Boost + Nitrous' };
+  var TYPE_LABEL = { belt: 'Belt drive', cam: 'Cam drive', inline: 'Electric in-line', intank: 'Electric in-tank' };
+
+  var els = {};
+  ['PumpCalcForm','PumpBrand','PumpCatalogHint','PumpHp','PumpFuel','PumpFuelNote','PumpAspirationToggle',
+   'PumpSystemToggle','PumpFuelPressure','PumpTypeGrid','PumpTypeNote','PumpSafetyMargin','PumpHeadline',
+   'PumpNitrousRow','PumpNitrousHp','PumpNitrousNote','PumpBoostRow','PumpBoostPsi','PumpBoostNote',
+   'PumpNosKitRow','PumpNosKitToggle','PumpNosSupplyRow','PumpNosSupplyToggle','PumpPsiNote',
+   'PumpChart','PumpChartKey',
+   'PumpHeadlineSub','PumpAspirationTable','PumpProductsList','RegProductsList','PumpCount','RegCount'
+  ].forEach(function (id) { els[id] = document.getElementById(id); });
+
+  var asp = 'na', sys = 'efi', ptype = '', brandDropped = null;
+  var nosKit = 'dry', nosSupply = 'shared';
+  var lastHits = [];
+
+  // ---------- formula (Fuelab-verified) ----------
+  function pressureFactor(psi) { return Math.max(0.1, (psi * -0.00556) + 1.25); }
+
+  // ⭐ A boost-referenced regulator tracks manifold pressure 1:1, so the rail actually sits at
+  //    base + boost and the pump has to make its number against THAT, not the base setting.
+  // ⭐ Nitrous is separate power with its own fuel, not a multiplier on the whole engine:
+  //    the motor is charged at its naturally-aspirated rate and the shot at the nitrous rate.
+  //
+  // ⭐ Whether the MAIN pump has to carry the shot's fuel at all depends on the kit:
+  //    - DRY: nitrous only through the plate or nozzle, the extra fuel comes out of the engine's
+  //      injectors. The main pump feeds it, always. Dry + standalone cannot exist.
+  //    - WET, shared: the kit sprays its own fuel but pulls from the same system. Main pump feeds it.
+  //    - WET, standalone: its own cell, pump and regulator. The main pump sizes for the ENGINE
+  //      only - adding the shot there would oversize the pump and cost the customer money.
+  function nitrousOnMainPump() { return nosKit === 'dry' || nosSupply === 'shared'; }
+
+  // ⭐ Four induction modes, one calculation. Two independent things are going on:
+  //    IS IT BOOSTED  -> the engine burns at the forced-induction rate AND a boost-referenced
+  //                      regulator carries the rail to base + boost.
+  //    IS THERE A SHOT -> that power is charged separately at the nitrous rate, and only lands on
+  //                      this pump if the kit feeds off it.
+  //    'both' is simply both being true, which is why it needs no special case of its own.
+  // ⛔ A carburetor has no fuel rail. Every user-facing mention of where the pressure is
+  //    measured has to follow the fuel system, or the copy describes hardware that isn't there.
+  function pressurePoint() { return (sys === 'carb') ? 'carb' : 'rail'; }
+  function isBoosted(mode) { return mode === 'forced' || mode === 'both'; }
+  function hasShot(mode) { return mode === 'nitrous' || mode === 'both'; }
+
+  function demand(pr, hp, mode) {
+    var f = FUEL_TYPES[pr.fuelKey];
+    var railPsi = Math.min(250, pr.psi + (isBoosted(mode) ? pr.boost : 0));
+    var shotOnPump = (hasShot(mode) && nitrousOnMainPump()) ? pr.nitrousHp : 0;
+    var enginePerHp = isBoosted(mode) ? f.factors.forced : f.factors.na;
+    var lbHr = ((hp * enginePerHp) + (shotOnPump * f.factors.nitrous)) *
+               (1 + pr.margin / 100) / pressureFactor(railPsi);
+    return { lbHr: lbHr, gph: lbHr / f.fuelWeightLbGal, railPsi: railPsi,
+             shotOnPump: shotOnPump, enginePerHp: enginePerHp };
+  }
+
+  function requiredGph(pr, aspiration) {
+    var f = FUEL_TYPES[pr.fuelKey];
+    var d = demand(pr, pr.hp, aspiration);
+    // what a SEPARATE nitrous pump would have to do, when the shot is off the main pump
+    var soloLbHr = (hasShot(aspiration) && !nitrousOnMainPump())
+      ? pr.nitrousHp * f.factors.nitrous * (1 + pr.margin / 100) / pressureFactor(pr.psi) : 0;
+    return { lbHr: d.lbHr, gph: d.gph, railPsi: d.railPsi,
+             totalHp: pr.hp + d.shotOnPump,
+             soloLbHr: soloLbHr, soloGph: soloLbHr / f.fuelWeightLbGal };
+  }
+  function params() {
+    return {
+      hp: parseFloat(els.PumpHp.value) || 500,
+      nitrousHp: parseFloat(els.PumpNitrousHp.value) || 0,
+      boost: parseFloat(els.PumpBoostPsi.value) || 0,
+      fuelKey: els.PumpFuel.value,
+      psi: parseFloat(els.PumpFuelPressure.value) || 43.5,
+      margin: parseFloat(els.PumpSafetyMargin.value) || 0
+    };
+  }
+
+  // ---------- fuel gate ----------
+  // ⛔ STANDING RULE: no electric pump moves enough volume for methanol. Mechanical only.
+  //    Enforced here rather than in the data because almost no vendor publishes a fuel field,
+  //    and 32 electric pumps carry copy claiming methanol compatibility - that is MATERIAL
+  //    compatibility, not capacity. Trusting the copy would point someone at a pump that starves.
+  function fuelOk(p, fuelKey) {
+    if (fuelKey === 'methanol' || fuelKey === 'e100') return p.me === 1;
+    if (fuelKey === 'e85') return p.go !== 1;
+    return true;
+  }
+  function typeOk(p, t) { return !t || (p.d || []).indexOf(t) !== -1; }
+
+  // ---------- published HP, where the vendor states one ----------
+  // ⭐ Keys are system_fuel_aspiration. Carb and EFI genuinely differ - the Marine Eliminator
+  //    is rated 2300 hp carbureted and 1900 hp on EFI - so the Carb/EFI toggle picks the cell.
+  //    If only the other system is published we still show it, but say which it is.
+  function statedHp(p, fuelKey, aspiration) {
+    if (!p.hp) return null;
+    var fu = (fuelKey === 'gasoline') ? 'gas' : 'e85';
+    // ⛔ only FORCED induction gets the boost rating. Nitrous leaves the manifold unpressurised,
+    //    so the pump works against base rail pressure and the NA rating is the right one.
+    var a = isBoosted(aspiration) ? 'boost' : 'na';
+    var other = (sys === 'carb') ? 'efi' : 'carb';
+    var v = p.hp[sys + '_' + fu + '_' + a] || p.hp[sys + '_' + fu + '_na'];
+    if (v) return { v: v, own: true };
+    v = p.hp[other + '_' + fu + '_' + a] || p.hp[other + '_' + fu + '_na'];
+    if (v) return { v: v, own: false, from: other };
+    return null;
+  }
+
+  function pool(pr) {
+    return PUMPS.filter(function (p) { return fuelOk(p, pr.fuelKey) && typeOk(p, ptype); });
+  }
+
+  // ---------- brand list follows type and fuel, so it never offers a dead end ----------
+  function syncBrands(pr) {
+    var keep = els.PumpBrand.value, seen = {}, list = [];
+    pool(pr).forEach(function (p) { if (!seen[p.v]) { seen[p.v] = 1; list.push(p.v); } });
+    list.sort();
+    els.PumpBrand.innerHTML = '<option value="">-- any brand --</option>' +
+      list.map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join('');
+    if (list.indexOf(keep) !== -1) {
+      els.PumpBrand.value = keep;
+      brandDropped = null;
+    } else if (keep) {
+      // brand is picked first now, so a later type/fuel choice can rule it out.
+      // never drop it silently - the customer needs to know why their brand vanished.
+      brandDropped = keep;
+    }
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function money(v) { return v == null ? '' : '$' + Number(v).toFixed(2); }
+
+  function margin(p, needGph, pr) {
+    if (!p.gph) {
+      var st = pr ? statedHp(p, pr.fuelKey, asp) : null;
+      if (st) {
+        var want = pr.hp + (hasShot(asp) && nitrousOnMainPump() ? pr.nitrousHp : 0);
+        var spare = st.v - want;
+        return '<p class="pumpcalc__prow-note ' +
+          (spare < want * 0.15 ? 'pumpcalc__prow-note--warn">Covers it, but tight &mdash; ' + spare.toLocaleString() + ' hp spare.'
+                               : 'pumpcalc__prow-note--ok">' + spare.toLocaleString() + ' hp of headroom.') + '</p>';
+      }
+      return '<p class="pumpcalc__prow-note">Rated by horsepower, not flow.</p>';
+    }
+    var m = p.gph - needGph;
+    if (m < 0) return '';
+    if (m < needGph * 0.15) return '<p class="pumpcalc__prow-note pumpcalc__prow-note--warn">Covers it, but tight &mdash; ' + m.toFixed(0) + ' gph spare.</p>';
+    return '<p class="pumpcalc__prow-note pumpcalc__prow-note--ok">' + m.toFixed(0) + ' gph of headroom.</p>';
+  }
+
+  function buyCell(x) {
+    return '<div class="pumpcalc__prow-buy"><span class="pumpcalc__price">' + money(x.pr) + '</span>' +
+      (x.vid
+        ? '<form action="/cart/add" method="post" enctype="multipart/form-data" class="pumpcalc__buy">' +
+          '<input type="hidden" name="id" value="' + esc(x.vid) + '">' +
+          '<input type="hidden" name="quantity" value="1">' +
+          '<button type="submit" class="btn btn--primary pumpcalc__add">Add to Cart</button></form>'
+        : '<a href="https://www.theefistore.com/products/' + esc(x.h) + '" class="btn btn--outline pumpcalc__add">View</a>') +
+      '</div>';
+  }
+
+  function pumpRow(p, needGph, pr) {
+    var stated = statedHp(p, pr.fuelKey, asp);
+    var bits = [];
+    if (p.gph) bits.push('<strong>' + p.gph.toFixed(0) + ' gph</strong>' + (p.psi ? ' @ ' + p.psi + ' psi' : ''));
+    if (stated) {
+      bits.push(stated.v.toLocaleString() + ' hp' +
+        (stated.own ? '' : ' (' + (stated.from === 'carb' ? 'carbureted' : 'EFI') + ' rating)') +
+        (p.hpd && pr.fuelKey !== 'gasoline' ? '*' : ''));
+    }
+    (p.d || []).forEach(function (d) { bits.push(TYPE_LABEL[d] || d); });
+    if (p.hex) bits.push(p.hex + '" hex');
+    if (p.n > 1) bits.push(p.n + '-pump module');
+    return '<li class="pumpcalc__prow"><div class="pumpcalc__prow-main">' +
+      '<a href="https://www.theefistore.com/products/' + esc(p.h) + '">' + esc(p.v) + ' &mdash; ' + esc(p.t) + '</a>' +
+      '<p class="pumpcalc__prow-spec">' + bits.join(' &middot; ') + '</p>' +
+      margin(p, needGph, pr) + '</div>' + buyCell(p) + '</li>';
+  }
+
+  function callout(msg) {
+    return '<p class="pumpcalc__no-match">' + msg + '</p><div class="pumpcalc__cta-row">' +
+      '<a href="tel:9287066112" class="btn btn--primary">Call 928-706-6112</a>' +
+      '<a href="https://www.theefistore.com/pages/get-an-appointment" class="btn btn--outline">Book Tuning</a></div>';
+  }
+
+  function renderPumps(needGph, pr, totalHp) {
+    if (!READY) { els.PumpProductsList.innerHTML = '<p class="pumpcalc__no-match">Loading the catalog&hellip;</p>'; return; }
+    var brand = els.PumpBrand.value;
+    var cand = pool(pr).filter(function (p) { return !brand || p.v === brand; });
+    // ⭐ Rank flow-rated and horsepower-rated pumps on ONE scale: how much margin each gives.
+    //    Sorting HP-only pumps by a missing flow figure pushed all 75 of them past the row cap,
+    //    so a pump like the Marine Eliminator was matched but never visible.
+    function marginRatio(p) {
+      if (p.gph) return p.gph / needGph;
+      var st = statedHp(p, pr.fuelKey, asp);
+      return st ? st.v / totalHp : Infinity;
+    }
+    var hit = cand.filter(function (p) {
+      if (p.gph) return p.gph >= needGph;
+      var st = statedHp(p, pr.fuelKey, asp);
+      return st ? st.v >= totalHp : false;
+    }).sort(function (a, b) {
+      // a complete fuel-system kit is sellable but should not outrank a bare pump
+      if ((a.kit ? 1 : 0) !== (b.kit ? 1 : 0)) return (a.kit ? 1 : 0) - (b.kit ? 1 : 0);
+      return marginRatio(a) - marginRatio(b);
+    });
+
+    els.PumpCount.textContent = hit.length ? '(' + hit.length + ')' : '';
+    if (!hit.length) {
+      lastHits = [];
+      els.PumpProductsList.innerHTML = callout('Nothing we stock covers ' + needGph.toFixed(0) +
+        ' gph at these settings' + (brand ? ' from ' + esc(brand) : '') +
+        '. Widen the brand or drive type, or call and we will source it.');
+      return;
+    }
+    lastHits = hit;
+    var html = '<ul class="pumpcalc__product-list pumpcalc__product-list--rows">' +
+      hit.slice(0, 12).map(function (p) { return pumpRow(p, needGph, pr); }).join('') + '</ul>';
+    if (hit.length > 12) {
+      html += '<p class="pumpcalc__caveat">Showing the 12 closest of ' + hit.length +
+        ' &mdash; narrow by brand or drive type to see the rest.</p>';
+    }
+    if (hit.some(function (p) { return p.psi && p.psi < pr.psi; })) {
+      html += '<p class="pumpcalc__caveat">Some list flow at a lower psi than your target. Real output drops as pressure rises, so lean to the higher-flow option.</p>';
+    }
+    if (hit.some(function (p) { return !p.psi; })) {
+      html += '<p class="pumpcalc__caveat">Most manufacturers do not publish the pressure their flow figure was measured at, so compare across brands as a guide rather than gospel.</p>';
+    }
+    if (pr.fuelKey !== 'gasoline' && hit.some(function (p) { return p.hpd; })) {
+      html += '<p class="pumpcalc__caveat">* E85 horsepower marked with an asterisk is worked out at 0.70 of the gasoline rating, the ratio Aeromotive publishes across its own range, because that pump maker did not state one.</p>';
+    }
+    html += '<div class="pumpcalc__cta-row"><a href="https://www.theefistore.com/pages/get-an-appointment" class="btn btn--outline">Get It Tuned Right</a></div>';
+    els.PumpProductsList.innerHTML = html;
+  }
+
+  function renderRegs(pr, r) {
+    if (!READY) { els.RegProductsList.innerHTML = ''; return; }
+    // ⭐ match on the BASE pressure, because that is what you set the regulator to.
+    //    A boost-referenced one then rises with manifold pressure on its own.
+    var want = pr.psi;
+    var hit = REGS.filter(function (r) {
+      if (pr.fuelKey !== 'gasoline' && r.go === 1) return false;
+      if (r.lo == null && r.hi == null) return false;
+      var lo = (r.lo == null) ? 0 : r.lo, hi = (r.hi == null) ? 1e6 : r.hi;
+      return want >= lo && want <= hi;
+    }).filter(function (r) {
+      return (sys === 'carb') ? (r.carb === 1 || r.efi === 0) : (r.efi === 1 || r.carb === 0);
+    }).sort(function (a, b) {
+      return ((a.hi || 0) - (a.lo || 0)) - ((b.hi || 0) - (b.lo || 0));
+    });
+
+    els.RegCount.textContent = hit.length ? '(' + hit.length + ')' : '';
+    if (!hit.length) {
+      els.RegProductsList.innerHTML = callout('Nothing we stock adjusts to ' + want.toFixed(0) +
+        ' psi for this setup. Call and we will match one to your pump.');
+      return;
+    }
+    var boostNote = (isBoosted(asp) && pr.boost)
+      ? '<p class="pumpcalc__caveat">Set to ' + pr.psi + ' psi base. On ' + pr.boost +
+        ' psi of boost a <strong>boost-referenced</strong> regulator carries the ' + pressurePoint() + ' to ' +
+        r.railPsi.toFixed(1) + ' psi on its own &mdash; make sure the one you pick has a boost reference port.</p>'
+      : '';
+    els.RegProductsList.innerHTML = boostNote + '<ul class="pumpcalc__product-list pumpcalc__product-list--rows">' +
+      hit.slice(0, 6).map(function (r) {
+        var rng = (r.lo != null && r.hi != null) ? r.lo + '&ndash;' + r.hi + ' psi'
+                : (r.hi != null ? 'up to ' + r.hi + ' psi' : 'from ' + r.lo + ' psi');
+        return '<li class="pumpcalc__prow"><div class="pumpcalc__prow-main">' +
+          '<a href="https://www.theefistore.com/products/' + esc(r.h) + '">' + esc(r.v) + ' &mdash; ' + esc(r.t) + '</a>' +
+          '<p class="pumpcalc__prow-spec">' + rng + (r.byp ? ' &middot; bypass' : '') + '</p></div>' +
+          buyCell(r) + '</li>';
+      }).join('') + '</ul>';
+  }
+
+
+  // ---------- chart: required flow against horsepower, with each pump as a flat line ----------
+  var CHART_COLORS = ['#ff1a1a', '#e8e8e8', '#ffb020', '#3aa0ff'];
+  function renderChart(pr, needGph, hits) {
+    var w = 600, h = 280, padL = 52, padR = 14, padT = 14, padB = 34;
+    // ⭐ dedupe by flow: two pumps rated the same draw the same line on top of each other,
+    //    which wastes a slot and reads as one. Show three DISTINCT flow levels instead.
+    var seenFlow = {}, top = [];
+    hits.forEach(function (p) {
+      if (!p.gph || top.length >= 3) return;
+      var k = p.gph.toFixed(0);
+      if (seenFlow[k]) return;
+      seenFlow[k] = 1;
+      top.push(p);
+    });
+
+    var hpMax = Math.max(Math.ceil((pr.hp * 1.8) / 250) * 250, 500);
+    var flowMax = needGph;
+    top.forEach(function (p) { if (p.gph > flowMax) flowMax = p.gph; });
+    // the curve's own top end matters too
+    var atMax = requiredGphAtHp(pr, hpMax);
+    if (atMax > flowMax) flowMax = atMax;
+    flowMax = Math.ceil(flowMax * 1.08 / 25) * 25;
+
+    function X(hp) { return padL + (hp / hpMax) * (w - padL - padR); }
+    function Y(g) { return h - padB - (g / flowMax) * (h - padT - padB); }
+
+    var o = [];
+    o.push('<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (h - padB) + '" stroke="var(--partmash-border)" stroke-width="1"/>');
+    o.push('<line x1="' + padL + '" y1="' + (h - padB) + '" x2="' + (w - padR) + '" y2="' + (h - padB) + '" stroke="var(--partmash-border)" stroke-width="1"/>');
+
+    // each pump's rated flow, flat across the chart
+    top.forEach(function (p, i) {
+      var yy = Y(p.gph), c = CHART_COLORS[(i + 1) % CHART_COLORS.length];
+      o.push('<line x1="' + padL + '" y1="' + yy + '" x2="' + (w - padR) + '" y2="' + yy + '" stroke="' + c + '" stroke-width="1.75" stroke-dasharray="6 4" opacity="0.9"/>');
+      o.push('<text x="' + (padL + 6) + '" y="' + (yy - 5) + '" font-size="10" fill="' + c + '">' + esc(p.v.split(' ')[0]) + ' &middot; ' + p.gph.toFixed(0) + ' gph</text>');
+      // where it crosses the requirement = the horsepower it runs out at
+      var cross = hpAtRequiredGph(pr, p.gph);
+      if (cross > 0 && cross < hpMax) {
+        o.push('<circle cx="' + X(cross) + '" cy="' + yy + '" r="3.5" fill="' + c + '"/>');
+        o.push('<text x="' + X(cross) + '" y="' + (yy + 14) + '" font-size="9" text-anchor="middle" fill="' + c + '">' + Math.round(cross).toLocaleString() + ' hp</text>');
+      }
+    });
+
+    // the requirement curve
+    var pts = [];
+    for (var i = 0; i <= 40; i++) {
+      var hp = hpMax * i / 40;
+      pts.push(X(hp) + ',' + Y(requiredGphAtHp(pr, hp)));
+    }
+    o.push('<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + CHART_COLORS[0] + '" stroke-width="2.5"/>');
+
+    // your target
+    o.push('<line x1="' + X(pr.hp) + '" y1="' + padT + '" x2="' + X(pr.hp) + '" y2="' + (h - padB) + '" stroke="var(--partmash-silver)" stroke-width="1" stroke-dasharray="3 3" opacity="0.65"/>');
+    o.push('<line x1="' + padL + '" y1="' + Y(needGph) + '" x2="' + (w - padR) + '" y2="' + Y(needGph) + '" stroke="var(--partmash-silver)" stroke-width="1" stroke-dasharray="3 3" opacity="0.65"/>');
+    o.push('<circle cx="' + X(pr.hp) + '" cy="' + Y(needGph) + '" r="4.5" fill="none" stroke="var(--partmash-white)" stroke-width="1.75"/>');
+    o.push('<text x="' + (X(pr.hp) + 7) + '" y="' + (padT + 11) + '" font-size="10" fill="var(--partmash-white)">' +
+      pr.hp.toLocaleString() + ' hp &middot; ' + needGph.toFixed(0) + ' gph min</text>');
+
+    o.push('<text x="6" y="' + (padT + 4) + '" font-size="10" fill="var(--partmash-silver)">' + flowMax + '</text>');
+    o.push('<text x="6" y="' + (h - padB - 2) + '" font-size="10" fill="var(--partmash-silver)">0 gph</text>');
+    o.push('<text x="' + padL + '" y="' + (h - 8) + '" font-size="10" fill="var(--partmash-silver)">0</text>');
+    o.push('<text x="' + (w - padR) + '" y="' + (h - 8) + '" text-anchor="end" font-size="10" fill="var(--partmash-silver)">' + hpMax.toLocaleString() + ' hp</text>');
+    els.PumpChart.innerHTML = o.join('');
+
+    els.PumpChartKey.innerHTML = top.length
+      ? top.map(function (p, i) {
+          return '<span class="pumpcalc__keyitem"><i style="background:' + CHART_COLORS[(i + 1) % CHART_COLORS.length] + '"></i>' +
+                 esc(p.v) + ' &mdash; ' + esc(p.t.slice(0, 44)) + '</span>';
+        }).join('')
+      : '<span class="pumpcalc__keyitem">No flow-rated pump matches yet.</span>';
+  }
+
+  // required flow at an arbitrary horsepower, same rules as the headline
+  function requiredGphAtHp(pr, hp) { return demand(pr, hp, asp).gph; }
+  // invert it: the horsepower at which a given flow runs out
+  function hpAtRequiredGph(pr, gph) {
+    var f = FUEL_TYPES[pr.fuelKey];
+    var d = demand(pr, 0, asp);   // rail pressure and the shot do not depend on engine hp
+    var lbHr = gph * f.fuelWeightLbGal * pressureFactor(d.railPsi) / (1 + pr.margin / 100);
+    return (lbHr - d.shotOnPump * f.factors.nitrous) / d.enginePerHp;
+  }
+
+  function renderTable(pr) {
+    var rows = ['na', 'nitrous', 'forced', 'both'].map(function (k) {
+      var r = requiredGph(pr, k);
+      var bits = [];
+      if (hasShot(k) && pr.nitrousHp) {
+        bits.push(nitrousOnMainPump() ? '+' + pr.nitrousHp + ' hp shot on this pump' : 'shot on its own pump');
+      }
+      if (isBoosted(k) && pr.boost) bits.push(pr.boost + ' psi &rarr; ' + r.railPsi.toFixed(1) + ' psi at the ' + pressurePoint());
+      var label = ASP_LABEL[k] +
+        (bits.length ? ' <span class="pumpcalc__tnote">' + bits.join(' &middot; ') + '</span>' : '');
+      return '<tr class="' + (k === asp ? 'is-selected' : '') + '"><td>' + label + '</td><td>' +
+        r.gph.toFixed(1) + ' gph</td><td>' + (r.gph / 60).toFixed(2) + ' gpm</td><td>' +
+        (r.gph * 3.785412).toFixed(0) + ' lph</td><td>' + r.lbHr.toFixed(0) + ' lb/hr</td></tr>';
+    }).join('');
+    els.PumpAspirationTable.innerHTML =
+      '<thead><tr><th>Induction</th><th>GPH</th><th>GPM</th><th>LPH</th><th>Fuel lb/hr</th></tr></thead><tbody>' +
+      rows + '</tbody>';
+  }
+
+  function fuelNote(pr) {
+    if (pr.fuelKey === 'methanol' || pr.fuelKey === 'e100') {
+      els.PumpFuelNote.innerHTML = '<strong>Mechanical pumps only.</strong> No electric pump moves the volume ' +
+        (pr.fuelKey === 'methanol' ? 'methanol' : 'E100') + ' needs, so the electric options are hidden.';
+    } else if (pr.fuelKey === 'e85') {
+      els.PumpFuelNote.textContent = 'E85 burns about 43% more fuel than gasoline for the same power. That is already in the figure.';
+    } else {
+      els.PumpFuelNote.textContent = '';
+    }
+  }
+
+  function inductionInputs(pr, r) {
+    // ⭐ each input follows the thing it describes: Nitrous hides the boost box, Forced
+    //    Induction hides the nitrous boxes, Both shows the lot.
+    var isNos = hasShot(asp), boosted = isBoosted(asp);
+    els.PumpNitrousRow.hidden = !isNos;
+    els.PumpNosKitRow.hidden = !isNos;
+    els.PumpNitrousNote.hidden = !isNos;
+    // ⛔ dry + standalone cannot exist: a dry kit's fuel comes out of the engine's injectors.
+    //    So the supply question is only asked for a wet kit.
+    els.PumpNosSupplyRow.hidden = !(isNos && nosKit === 'wet');
+    els.PumpBoostRow.hidden = !boosted;
+    els.PumpBoostNote.hidden = !boosted;
+    if (isNos) {
+      var onPump = nitrousOnMainPump();
+      var why = (nosKit === 'dry')
+        ? 'A <strong>dry</strong> kit sprays nitrous only &mdash; the extra fuel comes out of the engine&rsquo;s injectors, so your main pump has to carry it.'
+        : (onPump
+            ? 'A <strong>wet</strong> kit on the same fuel system still pulls through your main pump.'
+            : 'A <strong>standalone</strong> nitrous system has its own cell, pump and regulator, so the main pump only feeds the engine.');
+      var sum = onPump
+        ? 'Sized for <strong>' + pr.hp.toLocaleString() + ' + ' + pr.nitrousHp.toLocaleString() +
+          ' = ' + (pr.hp + pr.nitrousHp).toLocaleString() + ' hp</strong> of fuel.'
+        : 'Main pump sized for the engine&rsquo;s <strong>' + pr.hp.toLocaleString() + ' hp</strong> only. ' +
+          'Your separate nitrous pump needs about <strong>' + r.soloGph.toFixed(1) + ' gph</strong> (' +
+          r.soloLbHr.toFixed(0) + ' lb/hr) for the ' + pr.nitrousHp.toLocaleString() + ' hp shot.';
+      els.PumpNitrousNote.innerHTML = why + ' ' + sum +
+        (boosted ? ' On <strong>Both</strong>, the engine is fuelled at its boosted rate and the shot sits on top of that.'
+                 : ' Nitrous does not pressurise the manifold, so the ' + pressurePoint() + ' stays at ' + pr.psi + ' psi.');
+    }
+    if (boosted) {
+      els.PumpBoostNote.innerHTML = 'A boost-referenced regulator tracks manifold pressure 1:1, so ' +
+        'the ' + pressurePoint() + ' climbs to <strong>' + pr.psi + ' + ' + pr.boost + ' = ' + r.railPsi.toFixed(1) +
+        ' psi</strong> and the pump has to make its number against that.';
+    }
+  }
+
+  function recalc() {
+    var pr = params();
+    var r = requiredGph(pr, asp);
+    var totalHp = r.totalHp;
+    inductionInputs(pr, r);
+    els.PumpHeadline.textContent = r.gph.toFixed(1) + ' gph';
+    els.PumpHeadlineSub.textContent = ASP_LABEL[asp] + ', ' +
+      (hasShot(asp) ? pr.hp.toLocaleString() + ' hp + ' + pr.nitrousHp.toLocaleString() + ' hp shot'
+                    : pr.hp.toLocaleString() + ' hp') + ' ' +
+      (sys === 'carb' ? 'carbureted' : 'EFI') + ' on ' + FUEL_TYPES[pr.fuelKey].label +
+      ' at ' + r.railPsi.toFixed(1) + ' psi' +
+      (isBoosted(asp) && pr.boost ? ' at the ' + pressurePoint() + ' (' + pr.psi + ' base + ' + pr.boost + ' boost)' : '') +
+      '  (' + (r.gph / 60).toFixed(2) + ' gpm, ' +
+      (r.gph * 3.785412).toFixed(0) + ' lph, ' + r.lbHr.toFixed(0) + ' lb/hr of fuel)';
+    fuelNote(pr);
+    els.PumpPsiNote.innerHTML = (sys === 'carb')
+      ? 'A carburetor normally runs <strong>5&ndash;8 psi</strong> at the carb. Pressure with no boost on it.'
+      : 'Port EFI normally runs <strong>43.5&ndash;58 psi</strong> at the rail. Pressure with no boost on it.';
+    syncBrands(pr);
+    if (brandDropped && READY) {
+      els.PumpCatalogHint.textContent = brandDropped + ' does not make a pump matching those choices, so the brand filter was cleared.';
+    } else if (READY) {
+      els.PumpCatalogHint.textContent = PUMPS.length + ' pumps and ' + REGS.length + ' regulators in stock.';
+    }
+    renderTable(pr);
+    renderPumps(r.gph, pr, totalHp);
+    renderChart(pr, r.gph, lastHits);
+    renderRegs(pr, r);
+  }
+
+  els.PumpAspirationToggle.addEventListener('click', function (e) {
+    var b = e.target.closest('.pumpcalc__toggle-btn');
+    if (!b) return;
+    asp = b.getAttribute('data-mode');
+    Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('is-active', x === b); });
+    recalc();
+  });
+  // ⭐ Carb and EFI live at completely different pressures - a carb wants 5-8 psi, EFI wants
+  //    ~43.5. Switching system without moving the pressure sized the pump against a number
+  //    nobody runs. Only the toggle rewrites it, so a hand-typed pressure afterwards sticks.
+  var SYS_DEFAULT_PSI = { efi: 43.5, carb: 6 };
+  els.PumpSystemToggle.addEventListener('click', function (e) {
+    var b = e.target.closest('.pumpcalc__toggle-btn');
+    if (!b) return;
+    var next = b.getAttribute('data-sys');
+    if (next !== sys) {
+      var cur = parseFloat(els.PumpFuelPressure.value);
+      // only overwrite if the box still holds the OTHER system's default, i.e. untouched
+      if (!isFinite(cur) || cur === SYS_DEFAULT_PSI[sys]) {
+        els.PumpFuelPressure.value = SYS_DEFAULT_PSI[next];
+      }
+    }
+    sys = next;
+    Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('is-active', x === b); });
+    recalc();
+  });
+  els.PumpTypeGrid.addEventListener('click', function (e) {
+    var b = e.target.closest('.pumpcalc__type');
+    if (!b) return;
+    ptype = b.getAttribute('data-type');
+    Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('is-active', x === b); });
+    recalc();
+  });
+  els.PumpNosKitToggle.addEventListener('click', function (e) {
+    var b = e.target.closest('.pumpcalc__toggle-btn');
+    if (!b) return;
+    nosKit = b.getAttribute('data-kit');
+    Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('is-active', x === b); });
+    recalc();
+  });
+  els.PumpNosSupplyToggle.addEventListener('click', function (e) {
+    var b = e.target.closest('.pumpcalc__toggle-btn');
+    if (!b) return;
+    nosSupply = b.getAttribute('data-supply');
+    Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('is-active', x === b); });
+    recalc();
+  });
+  els.PumpBrand.addEventListener('change', recalc);
+  els.PumpCalcForm.addEventListener('input', recalc);
+
+  fetch(CATALOG_URL, { credentials: 'same-origin' })
+    .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+    .then(function (d) {
+      PUMPS = d.pumps || [];
+      REGS = d.regs || [];
+      READY = true;
+      els.PumpCatalogHint.textContent = PUMPS.length + ' pumps and ' + REGS.length + ' regulators in stock.';
+      recalc();
+    })
+    .catch(function (err) {
+      // ⛔ never let a failed load read as "no pumps match" - say the catalog did not load.
+      READY = false;
+      els.PumpCatalogHint.textContent = 'Catalog could not be loaded (' + err.message + ').';
+      els.PumpProductsList.innerHTML = callout('We could not load the pump catalog just now. The flow figure above is still correct &mdash; call us with it and we will pick the pump.');
+      els.RegProductsList.innerHTML = '';
+    });
+
+  recalc();
+})();
+</script>
+</body>
+</html>

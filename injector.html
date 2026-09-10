@@ -1,0 +1,1894 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Injector Sizing Calculator — The EFI Store</title>
+<meta name="description" content="Size injectors for your combination and add the right ones to the cart.">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EFI Tools">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Assistant:wght@400;600;700&display=swap">
+<style>:root{--color-background:#050505;--color-foreground:#ffffff;--font-heading--family:Anton, sans-serif;--font-heading--style:normal;--font-heading--weight:400;--font-primary--family:Assistant, sans-serif;--font-primary--style:normal;--font-primary--weight:400;--page-margin:20px;--page-width:110rem;--partmash-black:#050505;--partmash-border:#2a2a2a;--partmash-dark:#151515;--partmash-dark-2:#1f1f1f;--partmash-red:#d40000;--partmash-red-bright:#ff1a1a;--partmash-red-dark:#990000;--partmash-silver:#c9c9c9;--partmash-silver-light:#e8e8e8;--partmash-white:#ffffff;--style-border-radius-inputs:4px;}</style>
+<style>/** Critical CSS for the theme. This file is included on every page. */
+
+/* Reset styles inspired by https://www.joshwcomeau.com/css/custom-css-reset/ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-height: 100svh;
+}
+
+html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {
+  overflow: hidden;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  border-radius: var(--style-border-radius-inputs);
+}
+
+select {
+  background-color: var(--color-background);
+  color: currentcolor;
+}
+
+dialog {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+p {
+  text-wrap: pretty;
+}
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+p:empty {
+  display: none;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):first-child,
+:empty:first-child + :where(p, h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 0;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):last-child,
+:where(p, h1, h2, h3, h4, h5, h6) + :has(+ :empty:last-child) {
+  margin-block-end: 0;
+}
+
+/** Theme styles below */
+body {
+  font-family: var(--font-primary--family);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/** Section layout utilities */
+
+/**
+ * Setup a grid that enables both full-width and constrained layouts
+ * depending on the class of the child elements.
+ *
+ * By default, a minimum content margin is set on the left and right
+ * sides of the section and the content is centered in the viewport to
+ * not exceed the maximum page width.
+ *
+ * When a child element is given the `full-width` class, it will span
+ * the entire viewport.
+ */
+.shopify-section {
+  --content-width: min(
+    calc(var(--page-width) - var(--page-margin) * 2),
+    calc(100% - var(--page-margin) * 2)
+  );
+  --content-margin: minmax(var(--page-margin), 1fr);
+  --content-grid: var(--content-margin) var(--content-width) var(--content-margin);
+
+  /* This is required to make <img> elements work as background images */
+  position: relative;
+  grid-template-columns: var(--content-grid);
+  display: grid;
+  width: 100%;
+}
+
+/* Child elements, by default, are constrained to the central column of the grid. */
+.shopify-section > * {
+  grid-column: 2;
+}
+
+/* Child elements that use the full-width utility class span the entire viewport. */
+.shopify-section > .full-width {
+  grid-column: 1 / -1;
+}
+
+/* PartMash / The EFI Store custom theme styles */
+
+:root {
+  --partmash-black: #050505;
+  --partmash-dark: #151515;
+  --partmash-dark-2: #1f1f1f;
+  --partmash-red: #d40000;
+  --partmash-red-bright: #ff1a1a;
+  --partmash-red-dark: #990000;
+  --partmash-silver: #c9c9c9;
+  --partmash-silver-light: #e8e8e8;
+  --partmash-white: #ffffff;
+  --partmash-border: #2a2a2a;
+}
+
+body {
+  background-color: var(--partmash-black);
+  color: var(--partmash-white);
+}
+
+a {
+  color: inherit;
+}
+
+/* Headings use the bold condensed display font, uppercase, tight tracking */
+h1, h2, h3, h4, h5, h6,
+.heading-font {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.75rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.95rem;
+  border-radius: 3px;
+  border: 2px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn--primary {
+  background-color: var(--partmash-red);
+  color: var(--partmash-white);
+  border-color: var(--partmash-red);
+}
+.btn--primary:hover {
+  background-color: var(--partmash-red-bright);
+  border-color: var(--partmash-red-bright);
+}
+.btn--outline {
+  background-color: transparent;
+  color: var(--partmash-white);
+  border-color: var(--partmash-white);
+}
+.btn--outline:hover {
+  background-color: var(--partmash-white);
+  color: var(--partmash-black);
+}
+
+/* ---------- Section heading with red tick mark ---------- */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 1.35rem;
+  margin: 0 0 1.25rem;
+}
+.section-heading::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 1.4rem;
+  background-color: var(--partmash-red);
+  border-radius: 1px;
+}
+
+/* ---------- Trust badge strips ---------- */
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+.trust-strip--band {
+  background-color: var(--partmash-red);
+  padding: 0.9rem var(--page-margin);
+}
+.trust-strip__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+}
+.trust-strip__item svg,
+.trust-strip__item .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+.trust-strip__item-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: block;
+}
+.trust-strip__item-subtitle {
+  opacity: 0.85;
+  font-size: 0.8rem;
+  display: block;
+}
+.trust-strip--band .trust-strip__item {
+  color: var(--partmash-white);
+}
+.trust-strip--footer .trust-strip__item {
+  color: var(--partmash-silver-light);
+}
+.trust-strip--footer {
+  padding: 2rem 0;
+  border-top: 1px solid var(--partmash-border);
+}
+
+/* ---------- Tile grid (brands / categories) ---------- */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
+}
+.tile {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  padding: 1.1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  min-height: 110px;
+}
+.tile:hover {
+  border-color: var(--partmash-red);
+  transform: translateY(-2px);
+}
+.tile__icon {
+  width: 100%;
+  max-width: 130px;
+  max-height: 3.5rem;
+  object-fit: contain;
+}
+.tile__label {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.tile--brand .tile__label {
+  color: var(--partmash-red-bright);
+}
+
+/* Category tiles: icon + label stacked */
+.tile--category {
+  min-height: 130px;
+  gap: 0.5rem;
+}
+.tile__icon-wrap {
+  width: 3.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--partmash-silver-light);
+  transition: color 0.15s ease;
+}
+.tile__icon-wrap svg {
+  width: 100%;
+  height: 100%;
+}
+.tile--category:hover .tile__icon-wrap {
+  color: var(--partmash-red-bright);
+}
+.tile--category .tile__label {
+  color: var(--partmash-white);
+  font-size: 0.72rem;
+}
+
+/* ---------- Product cards ---------- */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+.product-card {
+  background-color: var(--partmash-dark);
+  border: 1px solid var(--partmash-border);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--partmash-white);
+  transition: border-color 0.15s ease;
+}
+.product-card:hover {
+  border-color: var(--partmash-red);
+}
+.product-card__image {
+  background-color: var(--partmash-white);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.product-card__body {
+  padding: 0.85rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-grow: 1;
+}
+.product-card__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.product-card__part {
+  font-size: 0.75rem;
+  color: var(--partmash-silver);
+}
+.product-card__price {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  color: var(--partmash-white);
+  font-size: 1.05rem;
+  margin-top: auto;
+}
+.product-card__cta {
+  margin-top: 0.5rem;
+}
+.product-grid__empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--partmash-silver);
+  border: 1px dashed var(--partmash-border);
+  border-radius: 6px;
+  grid-column: 1 / -1;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  background-color: var(--partmash-dark);
+  min-height: 420px;
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 2.5rem var(--page-margin);
+  max-width: 640px;
+}
+.hero__title {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  margin: 0 0 0.75rem;
+}
+.hero__title .accent {
+  color: var(--partmash-red-bright);
+  display: block;
+}
+.hero__subtitle {
+  font-size: 1.05rem;
+  color: var(--partmash-silver-light);
+  margin: 0 0 1.5rem;
+  max-width: 480px;
+}
+.hero__ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Section spacing ---------- */
+.section-padded {
+  padding: 2.5rem 0;
+}
+</style>
+<style>
+  .injcalc__banner {
+    background-color: #151515;
+    border-bottom: 1px solid var(--partmash-border);
+    padding: 2.5rem 0;
+  }
+  .injcalc__banner-inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+  .injcalc__crumb {
+    color: var(--partmash-silver);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+  .injcalc__crumb a {
+    color: var(--partmash-silver);
+  }
+  .injcalc__title {
+    margin-bottom: 0.5rem;
+  }
+  .injcalc__subtitle {
+    color: var(--partmash-silver-light);
+    max-width: 720px;
+    line-height: 1.6;
+  }
+  .injcalc__subtitle a {
+    color: var(--partmash-red-bright);
+  }
+
+  .injcalc__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .injcalc__form,
+  .injcalc__results {
+    min-width: 0;
+  }
+
+  .injcalc__field-block {
+    margin-bottom: 1.75rem;
+  }
+  .injcalc__block-heading {
+    color: var(--partmash-red-bright);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 1rem;
+  }
+  .injcalc__optional {
+    color: var(--partmash-silver);
+    font-size: 0.75rem;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .injcalc__row-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+  .injcalc__row-trio {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  .injcalc__row-trio[data-visible="1"] {
+    grid-template-columns: 1fr;
+  }
+  .injcalc__row-trio[data-visible="2"] {
+    grid-template-columns: 1fr 1fr;
+  }
+  .injcalc__row-pair > .injcalc__row,
+  .injcalc__row-trio > .injcalc__row {
+    min-width: 0;
+  }
+  .injcalc__row {
+    margin-bottom: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .injcalc__row input,
+  .injcalc__row select {
+    min-width: 0;
+    width: 100%;
+  }
+  .injcalc__row label {
+    color: var(--partmash-white);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.4rem;
+  }
+  .injcalc__row input,
+  .injcalc__row select {
+    background-color: var(--partmash-white);
+    border: 1px solid var(--partmash-border);
+    border-radius: 4px;
+    color: #1a1a1a;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .injcalc__row input:disabled {
+    opacity: 0.55;
+  }
+  .injcalc__row input:focus,
+  .injcalc__row select:focus {
+    outline: none;
+    border-color: var(--partmash-red-bright);
+  }
+  .injcalc__hint {
+    color: var(--partmash-silver);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: -0.5rem 0 1rem;
+  }
+
+  .injcalc__toggle {
+    display: inline-flex;
+    border: 1px solid var(--partmash-border);
+    border-radius: 4px;
+    overflow: hidden;
+    width: fit-content;
+    margin-bottom: 1.1rem;
+  }
+  .injcalc__toggle-btn {
+    background: #151515;
+    color: var(--partmash-silver-light);
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .injcalc__checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--partmash-silver-light);
+    font-size: 0.85rem;
+    margin: -0.4rem 0 1.25rem;
+    cursor: pointer;
+  }
+  .injcalc__checkbox-row input {
+    width: auto;
+    accent-color: var(--partmash-red);
+  }
+  .injcalc__toggle-btn.is-active {
+    background: var(--partmash-red);
+    color: var(--partmash-white);
+  }
+
+  .injcalc__advanced {
+    border-top: 1px solid var(--partmash-border);
+    padding-top: 1rem;
+  }
+  .injcalc__advanced summary {
+    color: var(--partmash-silver-light);
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 1rem;
+  }
+
+  .injcalc__results {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .injcalc__result-card {
+    background-color: #151515;
+    border: 1px solid var(--partmash-border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+  }
+  .injcalc__result-card--headline {
+    border-color: var(--partmash-red);
+    text-align: center;
+  }
+  .injcalc__result-label {
+    color: var(--partmash-silver);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+  .injcalc__result-value {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 2.25rem;
+    color: var(--partmash-red-bright);
+    margin: 0;
+  }
+  .injcalc__result-value--small {
+    font-size: 1.15rem;
+    color: var(--partmash-white);
+  }
+  .injcalc__result-sub {
+    color: var(--partmash-silver-light);
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+  }
+  .injcalc__verdict {
+    font-weight: 700;
+  }
+  .injcalc__verdict--ok { color: #6fd66f; }
+  .injcalc__verdict--warn { color: #ffb020; }
+  .injcalc__verdict--fail { color: var(--partmash-red-bright); }
+
+  .injcalc__chart-caption {
+    color: var(--partmash-silver);
+    font-size: 0.78rem;
+    margin-bottom: 0.75rem;
+  }
+  .injcalc__chart {
+    width: 100%;
+    height: auto;
+    background: #0c0c0c;
+    border-radius: 4px;
+  }
+  .injcalc__table-wrap {
+    overflow-x: auto;
+    margin-top: 1rem;
+  }
+  .injcalc__table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .injcalc__table th,
+  .injcalc__table td {
+    padding: 0.4rem 0.6rem;
+    text-align: right;
+    border-bottom: 1px solid var(--partmash-border);
+    color: var(--partmash-silver-light);
+  }
+  .injcalc__table th:first-child,
+  .injcalc__table td:first-child {
+    text-align: left;
+    color: var(--partmash-white);
+  }
+  .injcalc__table td.is-warning { color: #ffb020; }
+  .injcalc__table td.is-danger { color: var(--partmash-red-bright); font-weight: 700; }
+
+  .injcalc__product-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+  }
+  .injcalc__product-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--partmash-border);
+    color: var(--partmash-silver-light);
+    font-size: 0.9rem;
+  }
+  .injcalc__product-list a {
+    color: var(--partmash-white);
+    text-decoration: none;
+  }
+  .injcalc__product-list a:hover {
+    color: var(--partmash-red-bright);
+  }
+  .injcalc__no-match {
+    color: var(--partmash-silver-light);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  /* flow-size groups in "Matching Injectors In Stock" */
+  .injcalc__size-group {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 3px;
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+  .injcalc__size-group.is-recommended {
+    border-color: #ff1a1a;
+    background: rgba(255,26,26,0.06);
+  }
+  .injcalc__size-head { margin: 0 0 0.6rem; font-size: 0.95rem; }
+  .injcalc__size-head span { opacity: 0.75; font-weight: 400; }
+  .injcalc__rec-flag {
+    display: inline-block;
+    background: #ff1a1a; color: #fff;
+    font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 2px; margin-right: 0.4rem;
+    vertical-align: 2px;
+  }
+  .injcalc__pack-list { list-style: none; margin: 0; padding: 0; }
+  .injcalc__pack {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .injcalc__pack:first-child { border-top: 0; }
+  /* ⛔ min-width:0 is required — without it a flex item refuses to shrink and
+     text-overflow never kicks in, so a long product name pushes the button
+     off the row instead of ellipsising. */
+  .injcalc__pack-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .injcalc__pack-qty {
+    flex: 0 0 auto;
+    font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;
+    opacity: 0.75; white-space: nowrap;
+  }
+  .injcalc__pack-price {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap;
+    min-width: 5.5rem; text-align: right;
+  }
+  .injcalc__pack form { margin: 0; flex: 0 0 auto; }
+  .injcalc__add { padding: 0.4rem 0.8rem; font-size: 0.78rem; white-space: nowrap; }
+  .injcalc__pack-oos { flex: 0 0 auto; font-size: 0.78rem; opacity: 0.7; white-space: nowrap; }
+  @media (max-width: 620px) {
+    .injcalc__pack { flex-wrap: wrap; gap: 0.35rem 0.6rem; }
+    .injcalc__pack-name { flex: 1 1 100%; white-space: normal; overflow: visible; }
+    .injcalc__pack-price { margin-left: auto; text-align: left; min-width: 0; }
+  }
+
+  .injcalc__cta-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 900px) {
+    .injcalc__grid {
+      grid-template-columns: 1fr;
+    }
+    .injcalc__results {
+      position: static;
+    }
+  }
+  @media (max-width: 600px) {
+    .injcalc__row-pair,
+    .injcalc__row-trio {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+.efinav{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  padding:.6rem var(--page-margin);background:#0d0d0d;
+  border-bottom:2px solid var(--partmash-red);position:sticky;top:0;z-index:50}
+.efinav__home img{width:140px;height:auto;display:block}
+.efinav__links{display:flex;gap:.35rem;flex-wrap:wrap;flex:1 1 auto}
+.efinav__links a{color:var(--partmash-silver-light);text-decoration:none;font-size:.8rem;
+  font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:.45rem .7rem;
+  border:1px solid var(--partmash-border);border-radius:999px}
+.efinav__links a:hover{color:var(--partmash-red-bright);border-color:var(--partmash-red)}
+.efinav__call{color:var(--partmash-red-bright);font-weight:700;text-decoration:none;
+  font-size:1rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:600px){
+  .efinav{gap:.6rem;padding:.55rem 12px}
+  .efinav__home img{width:110px}
+  .efinav__links a{font-size:.75rem;padding:.5rem .6rem}
+}
+</style>
+<style>
+  .efitoolfoot {
+    background-color: #0d0d0d;
+    border-top: 2px solid var(--partmash-red);
+    margin-top: 2rem;
+  }
+  .efitoolfoot__inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: 2rem var(--page-margin) 2.25rem;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1.2fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .efitoolfoot__logo {
+    width: 210px;
+    height: auto;
+    display: block;
+    margin-bottom: .6rem;
+  }
+  .efitoolfoot__tag {
+    color: var(--partmash-silver-light);
+    font-size: .78rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin: 0 0 .6rem;
+  }
+  .efitoolfoot__blurb {
+    color: var(--partmash-silver);
+    font-size: .82rem;
+    line-height: 1.6;
+    margin: 0 0 .7rem;
+    max-width: 42ch;
+  }
+  .efitoolfoot__k {
+    color: var(--partmash-white);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin: 0 0 .55rem;
+  }
+  .efitoolfoot__phone {
+    display: block;
+    color: var(--partmash-red-bright);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: .5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .efitoolfoot__phone:hover { color: var(--partmash-white); }
+  .efitoolfoot__link {
+    display: block;
+    color: var(--partmash-silver-light);
+    font-size: .85rem;
+    text-decoration: none;
+    padding: .18rem 0;
+  }
+  .efitoolfoot__link:hover { color: var(--partmash-red-bright); }
+  .efitoolfoot__how {
+    border: 1px solid var(--partmash-border);
+    border-radius: 3px;
+    margin-bottom: .45rem;
+    background: #121212;
+  }
+  .efitoolfoot__how summary {
+    cursor: pointer;
+    padding: .5rem .7rem;
+    color: var(--partmash-silver-light);
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .efitoolfoot__how summary:hover { color: var(--partmash-white); }
+  .efitoolfoot__how ol {
+    margin: 0;
+    padding: 0 .7rem .7rem 1.9rem;
+    color: var(--partmash-silver);
+    font-size: .8rem;
+    line-height: 1.65;
+  }
+  .efitoolfoot__how b { color: var(--partmash-silver-light); }
+  .efitoolfoot__done {
+    color: #5FBF6A;
+    font-size: .85rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .efitoolfoot__inner { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 1.5rem; }
+    .efitoolfoot__logo { width: 180px; }
+    /* a phone number is for tapping, so give it a proper target */
+    .efitoolfoot__phone { font-size: 1.45rem; padding: .2rem 0; }
+    .efitoolfoot__link { padding: .45rem 0; }
+    .efitoolfoot__how summary { padding: .7rem; }
+  }
+</style>
+</head>
+<body>
+<nav class="efinav">
+  <a class="efinav__home" href="./index.html">
+    <img src="./assets/efi-store-logo.png" alt="The EFI Store" width="1130" height="290">
+  </a>
+  <div class="efinav__links">
+    <a href="./injector.html">Injectors</a>
+    <a href="./pump.html">Fuel Pump</a>
+    <a href="./shift.html">Shift Table</a>
+  </div>
+  <a class="efinav__call" href="tel:9287066112">928-706-6112</a>
+</nav>
+<div class="injcalc full-width">
+  <div class="injcalc__banner">
+    <div class="injcalc__banner-inner">
+      <p class="injcalc__crumb">
+        <a href="https://www.theefistore.com/">Home</a>
+        <span>/</span>
+        <a href="./index.html">Tech Center</a>
+        <span>/</span>
+        Injector Sizing Calculator
+      </p>
+      <h1 class="injcalc__title">Injector Sizing Calculator</h1>
+      <p class="injcalc__subtitle">
+        Airflow-based duty cycle estimate for your combo. This is a planning tool, not a tune —
+        for a build this serious, get it verified and dialed in by a real tuner.
+        <a href="https://www.theefistore.com/pages/get-an-appointment">Book a session</a> or
+        <a href="tel:9287066112">call 928-706-6112</a>.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-padded">
+    <div class="injcalc__grid">
+
+      <form class="injcalc__form" id="InjCalcForm">
+        <div class="injcalc__field-block">
+          <h2 class="injcalc__block-heading">Check a Specific Injector <span class="injcalc__optional">(optional)</span></h2>
+          <div class="injcalc__row-pair">
+            <div class="injcalc__row">
+              <label for="InjBrand">Brand</label>
+              <select id="InjBrand">
+                <option value="">-- any brand --</option>
+              </select>
+            </div>
+            <div class="injcalc__row">
+              <label for="InjPick">Injector</label>
+              <select id="InjPick">
+                <option value="">-- select brand first --</option>
+              </select>
+            </div>
+          </div>
+          <p class="injcalc__hint" id="InjCatalogHint"></p>
+        </div>
+
+        <div class="injcalc__field-block">
+          <h2 class="injcalc__block-heading">Engine Parameters</h2>
+
+          <div class="injcalc__row-pair">
+            <div class="injcalc__row">
+              <label for="InjCid">Displacement (cubic inches)</label>
+              <input type="number" id="InjCid" value="383" min="1" step="1">
+            </div>
+            <div class="injcalc__row">
+              <label for="InjCyl">Cylinders</label>
+              <input type="number" id="InjCyl" value="8" min="1" max="16" step="1">
+            </div>
+          </div>
+
+          <div class="injcalc__row-pair">
+            <div class="injcalc__row">
+              <label for="InjVe">Volumetric Efficiency (%)</label>
+              <input type="number" id="InjVe" value="100" min="30" max="150" step="1">
+            </div>
+            <div class="injcalc__row">
+              <label for="InjBoost">Boost (psi, 0 if N/A)</label>
+              <input type="number" id="InjBoost" value="10" min="0" max="60" step="0.5">
+            </div>
+          </div>
+          <p class="injcalc__hint">VE guide: mild street cam ≈ 80–85%, aggressive street/strip ≈ 90–100%, drag race / heavily boosted ≈ 100–130%+.</p>
+
+          <div class="injcalc__row-pair">
+            <div class="injcalc__row">
+              <label for="InjLambda">Lambda at WOT</label>
+              <input type="number" id="InjLambda" value="0.86" min="0.5" max="1.2" step="0.01" disabled>
+            </div>
+            <div class="injcalc__row">
+              <label for="InjAfr">AFR at WOT (:1)</label>
+              <input type="number" id="InjAfr" value="12.6" min="4" max="20" step="0.1">
+            </div>
+          </div>
+          <label class="injcalc__checkbox-row">
+            <input type="checkbox" id="InjUseAfr" checked>
+            Use AFR instead of Lambda for this calculation
+          </label>
+
+          <div class="injcalc__row">
+            <label for="InjFuel">Fuel Type</label>
+            <select id="InjFuel">
+              <option value="gasoline" selected>Gasoline (Pump)</option>
+              <option value="racegas">Race Gas (Unleaded)</option>
+              <option value="e85">E85</option>
+              <option value="e100">E100 (Pure Ethanol)</option>
+              <option value="methanol">Methanol</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="injcalc__row-pair" id="InjCustomFuelRow" hidden>
+            <div class="injcalc__row">
+              <label for="InjCustomAfr">Custom Stoich. AFR (:1)</label>
+              <input type="number" id="InjCustomAfr" value="14.7" min="4" max="20" step="0.1">
+            </div>
+            <div class="injcalc__row">
+              <label for="InjCustomBsfc">Your BSFC, if known (lb/hp/hr)</label>
+              <input type="number" id="InjCustomBsfc" min="0.2" max="1.5" step="0.01" placeholder="optional">
+            </div>
+          </div>
+          <p class="injcalc__hint" id="InjFuelRefHint">Reference BSFC: 0.50–0.60 lb/hp/hr typical (NA to boosted). Not used in this calculation — shown for cross-checking against dyno numbers, since the math below is airflow-based, not BSFC-based.</p>
+
+          <div class="injcalc__row-pair">
+            <div class="injcalc__row">
+              <label for="InjFuelPressure">Fuel Pressure (psi)</label>
+              <input type="number" id="InjFuelPressure" value="43.5" min="10" max="150" step="0.5">
+            </div>
+            <div class="injcalc__row">
+              <label for="InjRedline">Redline RPM</label>
+              <input type="number" id="InjRedline" value="7000" min="2000" max="14000" step="100">
+            </div>
+          </div>
+
+          <div class="injcalc__row">
+            <label>Fuel System</label>
+            <div class="injcalc__toggle" id="InjFuelSystemToggle">
+              <button type="button" class="injcalc__toggle-btn" data-mode="constant" title="No vacuum line connected to the regulator.">Constant Pressure</button>
+              <button type="button" class="injcalc__toggle-btn is-active" data-mode="referenced" title="If your engine is N/A and your regulator is vacuum referenced, choose this.">Vac/Boost Ref (1:1)</button>
+            </div>
+          </div>
+        </div>
+
+        <details class="injcalc__advanced">
+          <summary>Advanced settings</summary>
+          <div class="injcalc__row-pair">
+            <div class="injcalc__row">
+              <label for="InjDutyTarget">Max Target Duty Cycle (%)</label>
+              <input type="number" id="InjDutyTarget" value="85" min="50" max="100" step="1">
+            </div>
+            <div class="injcalc__row">
+              <label for="InjRatedDp">Injector Rated ΔP (psi)</label>
+              <input type="number" id="InjRatedDp" value="43.5" min="10" max="150" step="0.5">
+            </div>
+          </div>
+          <div class="injcalc__row">
+            <label for="InjSetCount">Sets of Injectors</label>
+            <select id="InjSetCount">
+              <option value="1" selected>1 set</option>
+              <option value="2">2 sets (staged)</option>
+              <option value="3">3 sets (staged)</option>
+            </select>
+          </div>
+          <div class="injcalc__row-trio" id="InjSetFieldsRow">
+            <div class="injcalc__row" id="InjSet1Wrap">
+              <label for="InjSet1">Injectors in Set 1</label>
+              <input type="number" id="InjSet1" value="8" min="1" max="8" step="1">
+            </div>
+            <div class="injcalc__row" id="InjSet2Wrap" hidden>
+              <label for="InjSet2">Injectors in Set 2</label>
+              <input type="number" id="InjSet2" value="8" min="1" max="8" step="1">
+            </div>
+            <div class="injcalc__row" id="InjSet3Wrap" hidden>
+              <label for="InjSet3">Injectors in Set 3</label>
+              <input type="number" id="InjSet3" value="8" min="1" max="8" step="1">
+            </div>
+          </div>
+          <p class="injcalc__hint">Total injectors = sum of all sets. All sets are treated as firing together and sharing the load evenly — this does not model a staged-injection kick-in point.</p>
+        </details>
+      </form>
+
+      <div class="injcalc__results" id="InjResults">
+        <div class="injcalc__result-card injcalc__result-card--headline">
+          <p class="injcalc__result-label">Minimum Injector Size Needed</p>
+          <p class="injcalc__result-value" id="InjHeadline">—</p>
+          <p class="injcalc__result-sub" id="InjHeadlineSub"></p>
+        </div>
+
+        <div class="injcalc__result-card" id="InjPickedCard" hidden>
+          <p class="injcalc__result-label">Checking</p>
+          <p class="injcalc__result-value injcalc__result-value--small" id="InjPickedTitle">—</p>
+          <p class="injcalc__result-sub" id="InjPickedVerdict"></p>
+        </div>
+
+        <div class="injcalc__result-card">
+          <p class="injcalc__result-label">Duty Cycle vs RPM</p>
+          <p class="injcalc__chart-caption">Assumes VE and boost hold steady at your input values across this RPM range — not a dyno curve.</p>
+          <svg id="InjChart" viewBox="0 0 600 260" class="injcalc__chart" preserveAspectRatio="none"></svg>
+          <div class="injcalc__table-wrap">
+            <table class="injcalc__table" id="InjTable"></table>
+          </div>
+        </div>
+
+        <div class="injcalc__result-card" id="InjProductsCard">
+          <p class="injcalc__result-label">Matching Injectors In Stock</p>
+          <div id="InjProductsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<aside class="efitoolfoot full-width">
+  <div class="efitoolfoot__inner">
+
+    <div class="efitoolfoot__brand">
+      <img class="efitoolfoot__logo"
+           src="./assets/efi-store-logo.png"
+           alt="The EFI Store" width="1130" height="290" loading="lazy">
+      <p class="efitoolfoot__tag">Product &middot; Support &middot; Tuning</p>
+      <p class="efitoolfoot__blurb">
+        Built from real tuning experience. This is a planning tool &mdash; when you want it
+        dialed in on the dyno, that is what we do.
+      </p>
+    </div>
+
+    <div class="efitoolfoot__contact">
+      <p class="efitoolfoot__k">Talk to a tuner</p>
+      <a class="efitoolfoot__phone" href="tel:9287066112">928-706-6112</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/">theefistore.com</a>
+      <a class="efitoolfoot__link" href="https://www.theefistore.com/pages/get-an-appointment">Book a tuning session</a>
+      <a class="efitoolfoot__link" href="./index.html">More tools in the Tech Center</a>
+    </div>
+
+    <div class="efitoolfoot__install" id="EfiInstall">
+      <p class="efitoolfoot__k">Keep this on your phone</p>
+      <p class="efitoolfoot__blurb">
+        Save it to your home screen and it opens like an app &mdash; no app store, and it is
+        always the current version.
+      </p>
+      <details class="efitoolfoot__how">
+        <summary>iPhone &amp; iPad</summary>
+        <ol>
+          <li>Tap <b>Share</b> in Safari &mdash; the square with the arrow.</li>
+          <li>Scroll and tap <b>Add to Home Screen</b>.</li>
+          <li>Name it and tap <b>Add</b>.</li>
+        </ol>
+      </details>
+      <details class="efitoolfoot__how">
+        <summary>Android</summary>
+        <ol>
+          <li>Tap the <b>&#8942;</b> menu in Chrome.</li>
+          <li>Tap <b>Add to Home screen</b>.</li>
+        </ol>
+      </details>
+      <p class="efitoolfoot__done" id="EfiInstalled" hidden>
+        Running from your home screen. &#10003;
+      </p>
+    </div>
+
+  </div>
+</aside>
+
+<script>
+  (function () {
+    // already saved to the home screen? then the how-to is just noise
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                     || window.navigator.standalone === true;
+    if (!standalone) return;
+    var box = document.getElementById('EfiInstall');
+    var done = document.getElementById('EfiInstalled');
+    if (!box || !done) return;
+    box.querySelectorAll('.efitoolfoot__how, .efitoolfoot__blurb').forEach(function (el) { el.hidden = true; });
+    done.hidden = false;
+  })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js'); });
+}
+</script>
+<script>
+/* Standalone bridge - only the app build needs this, the store page never does.
+   ⛔ Catalog JSON carries STORE-RELATIVE urls ("/products/...") and the buy forms post to
+      "/cart/add". Off theefistore.com both 404, and the JSON is shipped verbatim so a
+      build-time rewrite would not catch the links the tools render from it. Handled at
+      click time instead, which also covers anything added to the catalogs later. */
+(function () {
+  var STORE = "https://www.theefistore.com";
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (!a) return;
+    var h = a.getAttribute("href");
+    if (!h || h.charAt(0) !== "/" || h.charAt(1) === "/") return;   /* "//host" is absolute */
+    e.preventDefault();
+    window.location.href = STORE + h;
+  }, true);
+  /* ⭐ TESTED, not assumed: a cross-origin POST to the store's own /cart/add adds the item
+     under the store's cookie and lands on /cart. The documented /cart/<id>:<qty> permalink
+     was tried first and rejected - it runs straight to checkout, and this store's checkout
+     bounces to a Shopify sign-in, so the customer meets a login instead of their cart. */
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f || f.getAttribute("action") !== "/cart/add") return;
+    e.preventDefault();
+    var g = document.createElement("form");
+    g.method = "post";
+    g.action = STORE + "/cart/add";
+    /* ⛔ NOT target="_blank" - a popup-blocked submit is a dead Add to Cart button with no
+       error. A same-tab submit always fires, and an out-of-scope navigation from a standalone
+       PWA opens the browser (Android custom tab / iOS Safari) with the app left intact. */
+    g.enctype = "multipart/form-data";
+    Array.prototype.forEach.call(f.querySelectorAll("[name]"), function (el) {
+      var i = document.createElement("input");
+      i.type = "hidden"; i.name = el.name; i.value = el.value;
+      g.appendChild(i);
+    });
+    document.body.appendChild(g);
+    g.submit();
+    g.parentNode.removeChild(g);
+  }, true);
+})();
+</script><script>
+(function () {
+  'use strict';
+
+  var CATALOG_URL = "./assets/injector-catalog.json";
+  var CATALOG = [];
+
+  // ⛔ An empty CATALOG has THREE meanings and they must never collapse into one.
+  // "still loading" and "the fetch failed" are not "we sell no injectors" - printing
+  // that on a live page would be a lie. Every empty-state branch reads this.
+  var LOAD_STATE = 'loading';   // 'loading' | 'ok' | 'error'
+  var LOAD_ERROR = '';
+
+  var FUEL_TYPES = {
+    gasoline: { label: 'Gasoline (Pump)', stoichAFR: 14.7, refBsfc: '0.50–0.60 lb/hp/hr typical (NA to boosted)' },
+    racegas: { label: 'Race Gas (Unleaded)', stoichAFR: 14.6, refBsfc: '0.48–0.58 lb/hp/hr typical' },
+    e85: { label: 'E85', stoichAFR: 9.8, refBsfc: '0.62–0.72 lb/hp/hr typical' },
+    e100: { label: 'E100 (Pure Ethanol)', stoichAFR: 9.0, refBsfc: '0.68–0.80 lb/hp/hr typical' },
+    methanol: { label: 'Methanol', stoichAFR: 6.4, refBsfc: '0.90–1.10 lb/hp/hr typical' },
+    custom: { label: 'Custom', stoichAFR: null, refBsfc: null }
+  };
+
+  var els = {
+    form: document.getElementById('InjCalcForm'),
+    brand: document.getElementById('InjBrand'),
+    pick: document.getElementById('InjPick'),
+    catalogHint: document.getElementById('InjCatalogHint'),
+    cid: document.getElementById('InjCid'),
+    cyl: document.getElementById('InjCyl'),
+    ve: document.getElementById('InjVe'),
+    boost: document.getElementById('InjBoost'),
+    lambda: document.getElementById('InjLambda'),
+    afr: document.getElementById('InjAfr'),
+    useAfr: document.getElementById('InjUseAfr'),
+    fuel: document.getElementById('InjFuel'),
+    customFuelRow: document.getElementById('InjCustomFuelRow'),
+    customAfr: document.getElementById('InjCustomAfr'),
+    customBsfc: document.getElementById('InjCustomBsfc'),
+    fuelRefHint: document.getElementById('InjFuelRefHint'),
+    fuelPressure: document.getElementById('InjFuelPressure'),
+    redline: document.getElementById('InjRedline'),
+    fuelSystemToggle: document.getElementById('InjFuelSystemToggle'),
+    dutyTarget: document.getElementById('InjDutyTarget'),
+    ratedDp: document.getElementById('InjRatedDp'),
+    setCount: document.getElementById('InjSetCount'),
+    setFieldsRow: document.getElementById('InjSetFieldsRow'),
+    set1: document.getElementById('InjSet1'),
+    set2: document.getElementById('InjSet2'),
+    set3: document.getElementById('InjSet3'),
+    set2Wrap: document.getElementById('InjSet2Wrap'),
+    set3Wrap: document.getElementById('InjSet3Wrap'),
+    headline: document.getElementById('InjHeadline'),
+    headlineSub: document.getElementById('InjHeadlineSub'),
+    pickedCard: document.getElementById('InjPickedCard'),
+    pickedTitle: document.getElementById('InjPickedTitle'),
+    pickedVerdict: document.getElementById('InjPickedVerdict'),
+    chart: document.getElementById('InjChart'),
+    table: document.getElementById('InjTable'),
+    productsList: document.getElementById('InjProductsList')
+  };
+
+  var mixtureMode = 'afr';
+  var fuelSystemMode = 'referenced';
+  var selectedInjector = null;
+
+  // ---------- Brand / Injector dropdowns ----------
+  // ⚠️ Runs twice now: once before the catalog lands and again after. It has to CLEAR
+  // what it added last time or every brand appears twice.
+  function populateBrands() {
+    var keep = els.brand.options[0];        // the placeholder option
+    els.brand.innerHTML = '';
+    if (keep) els.brand.appendChild(keep);
+
+    var vendors = [];
+    CATALOG.forEach(function (p) {
+      if (p.vendor && vendors.indexOf(p.vendor) === -1) vendors.push(p.vendor);
+    });
+    vendors.sort();
+    vendors.forEach(function (v) {
+      var opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      els.brand.appendChild(opt);
+    });
+
+    if (LOAD_STATE === 'loading') {
+      els.catalogHint.textContent = 'Loading the injector catalog…';
+    } else if (LOAD_STATE === 'error') {
+      els.catalogHint.textContent = 'The injector catalog could not be loaded (' + LOAD_ERROR + '). ' +
+        'The calculator below still works — the flow figure it gives you is correct.';
+    } else if (CATALOG.length === 0) {
+      els.catalogHint.textContent = 'No injector products in the catalog yet — the calculator below still works using your engine parameters.';
+    } else {
+      els.catalogHint.textContent = CATALOG.length + ' injectors in stock, ' +
+        countSizes() + ' flow sizes from ' + minFlowInCatalog() + ' to ' + maxFlowInCatalog() + ' lb/hr.';
+    }
+  }
+
+  function countSizes() {
+    var seen = {};
+    CATALOG.forEach(function (p) { seen[parseFloat(p.flowLbHr)] = 1; });
+    return Object.keys(seen).length;
+  }
+  function minFlowInCatalog() {
+    return CATALOG.reduce(function (m, p) { var f = parseFloat(p.flowLbHr); return f < m ? f : m; }, Infinity);
+  }
+  function maxFlowInCatalog() {
+    return CATALOG.reduce(function (m, p) { var f = parseFloat(p.flowLbHr); return f > m ? f : m; }, -Infinity);
+  }
+
+  // How many injectors are in the box. Flow is always PER INJECTOR, so this only
+  // matters for what someone buys, never for the calculation.
+  // ⛔ Holley writes "Set of Eight", not "Set of 8". A digits-only regex read those
+  // as singles, so an 8-pack showed as "Single" — someone could order 8 of them and
+  // get 64 injectors. Words must be handled.
+  var NUMBER_WORDS = {
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
+    nine: 9, ten: 10, eleven: 11, twelve: 12, sixteen: 16, twentyfour: 24
+  };
+
+  // ⛔ THIS IS MONEY: the buy button multiplies boxes by this number. Read it wrong
+  // and an 8-injector build orders eight boxes of an eight-pack - 64 injectors.
+  //
+  // packQty in the catalog is the count the VENDOR states in their own dealer file.
+  // Nine ACCEL products are titled only "ACCEL - Fuel Injectors - 44 lb/hr" while
+  // ACCEL’s dealer description reads "PERF FUEL INJECTOR 44LB 8-PAK". Parsing the
+  // title read every one of them as a single. Trust the field first, always.
+  function packQty(p) {
+    if (p && typeof p === 'object') {
+      var stated = parseInt(p.packQty, 10);
+      if (isFinite(stated) && stated > 0) return stated;   // the vendor said so
+    }
+
+    // Fallback for products no dealer file covers - their titles do state the count.
+    var t = String(p && typeof p === 'object' ? p.title : p);
+    var m = /(\d{1,2})\s*[-\s]?pack\b/i.exec(t)
+         || /\bset of\s*(\d{1,2})\b/i.exec(t)
+         || /\b(\d{1,2})\s*injectors?\b/i.exec(t);
+    if (m) return parseInt(m[1], 10);
+
+    var w = /\bset of\s+([a-z]+)\b/i.exec(t) || /\b([a-z]+)[-\s]?pack\b/i.exec(t);
+    if (w) {
+      var n = NUMBER_WORDS[w[1].toLowerCase().replace(/[^a-z]/g, '')];
+      if (n) return n;
+    }
+    return 1;                       // "Individual", "Single", or unmarked
+  }
+
+  // What actually distinguishes two injectors of the same flow: the connector it
+  // plugs into, its impedance, and its physical size. Product titles bury these in
+  // different orders per brand, so pull them out and show them instead of prose.
+  var CONNECTORS = [
+    [/\bEV1\b|\bminitimer\b|jetronic/i, 'EV1 / Minitimer'],
+    [/\bEV6\b|\bUSCAR\b|\bEV14\b/i,     'EV6 / USCAR'],
+    [/\bPICO\b/i,                        'PICO'],
+    [/\bdenso\b|sumitomo/i,              'Denso / Sumitomo'],
+    [/\bbosch\b/i,                       'Bosch']
+  ];
+
+  function injectorSpecs(p) {
+    var t = String(p.title || '');
+    var sku = String(p.sku || '');
+    var bits = [];
+
+    var conn = null;
+    for (var i = 0; i < CONNECTORS.length; i++) {
+      if (CONNECTORS[i][0].test(t)) { conn = CONNECTORS[i][1]; break; }
+    }
+
+    // Injector Dynamics encodes it in the SKU: flow.length.topOring.bottomOring.qty
+    var id = /^ID\d{3,4}\.(\d{2,3})\.(\d{1,2})\.([0-9]{1,2})[A-Z]*\./i.exec(sku);
+    var length = null, orings = null;
+    if (id) {
+      length = id[1] + 'mm';
+      orings = (id[2] === id[3]) ? (id[2] + 'mm o-rings') : (id[2] + '/' + id[3] + 'mm o-rings');
+    } else {
+      var lm = /\b(\d{2,3})\s*mm\b/.exec(t);
+      if (lm) length = lm[1] + 'mm';
+    }
+
+    var imp = /low\s*imp/i.test(t) ? 'Low-Z' : (/high\s*imp/i.test(t) ? 'High-Z' : null);
+
+    if (conn)   bits.push(conn);
+    if (imp)    bits.push(imp);
+    if (length) bits.push(length);
+    if (orings) bits.push(orings);
+    return bits;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function money(cents) {
+    return '$' + (Number(cents) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  // The dropdown lists FLOW SIZES, not products. The same 1050cc injector ships as
+  // a single, a set of 6, a set of 8... which made this list unusable — 35 Holley
+  // entries for 15 real sizes. Pick a size here, choose the pack below.
+  function sizesForBrand(vendor) {
+    var seen = {}, out = [];
+    CATALOG.forEach(function (p) {
+      if (vendor && p.vendor !== vendor) return;
+      var f = parseFloat(p.flowLbHr);
+      if (!isFinite(f) || seen[f]) return;
+      seen[f] = true;
+      out.push(f);
+    });
+    return out.sort(function (a, b) { return a - b; });
+  }
+
+  function populatePicksForBrand(vendor) {
+    els.pick.innerHTML = '';
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = vendor ? '-- select a flow size --' : '-- select brand first --';
+    els.pick.appendChild(placeholder);
+
+    sizesForBrand(vendor).forEach(function (f) {
+      var opt = document.createElement('option');
+      opt.value = String(f);
+      opt.textContent = f + ' lb/hr  (' + Math.round(f * 10.5) + ' cc/min)';
+      els.pick.appendChild(opt);
+    });
+  }
+
+  els.brand.addEventListener('change', function () {
+    populatePicksForBrand(els.brand.value);
+    selectedInjector = null;
+    recalc();
+  });
+  els.pick.addEventListener('change', function () {
+    var f = parseFloat(els.pick.value);
+    if (!isFinite(f)) { selectedInjector = null; recalc(); return; }
+    // synthetic: the graph and verdict only ever needed a flow number and a label
+    selectedInjector = {
+      flowLbHr: f,
+      vendor: els.brand.value || 'Any brand',
+      title: f + ' lb/hr (' + Math.round(f * 10.5) + ' cc/min)'
+    };
+    recalc();
+  });
+
+  // ---------- Pre-select from ?injector=<handle> ----------
+  function preselectFromQuery() {
+    var params = new URLSearchParams(window.location.search);
+    var handle = params.get('injector');
+    if (!handle) return;
+    var match = CATALOG.find(function (p) { return p.handle === handle; });
+    if (!match) return;
+    // the link still points at a product, but the dropdown now holds flow sizes
+    els.brand.value = match.vendor;
+    populatePicksForBrand(match.vendor);
+    var f = parseFloat(match.flowLbHr);
+    els.pick.value = String(f);
+    selectedInjector = {
+      flowLbHr: f,
+      vendor: match.vendor,
+      title: f + ' lb/hr (' + Math.round(f * 10.5) + ' cc/min)'
+    };
+  }
+
+  // ---------- Lambda / AFR toggle ----------
+  function currentStoichAFR() {
+    var f = els.fuel.value;
+    if (f === 'custom') return parseFloat(els.customAfr.value) || 14.7;
+    return FUEL_TYPES[f].stoichAFR;
+  }
+
+  els.useAfr.addEventListener('change', function () {
+    mixtureMode = els.useAfr.checked ? 'afr' : 'lambda';
+    els.lambda.disabled = mixtureMode !== 'lambda';
+    els.afr.disabled = mixtureMode !== 'afr';
+    syncLambdaAfr();
+    recalc();
+  });
+  function syncLambdaAfr() {
+    var stoich = currentStoichAFR();
+    if (mixtureMode === 'lambda') {
+      var lam = parseFloat(els.lambda.value) || 0.86;
+      els.afr.value = (lam * stoich).toFixed(2);
+    } else {
+      var afr = parseFloat(els.afr.value) || (0.86 * stoich);
+      els.lambda.value = (afr / stoich).toFixed(3);
+    }
+  }
+  function currentLambda() {
+    if (mixtureMode === 'lambda') return parseFloat(els.lambda.value) || 0.86;
+    var stoich = currentStoichAFR();
+    return (parseFloat(els.afr.value) || 12.6) / stoich;
+  }
+  els.lambda.addEventListener('input', function () { if (mixtureMode === 'lambda') { syncLambdaAfr(); recalc(); } });
+  els.afr.addEventListener('input', function () { if (mixtureMode === 'afr') { syncLambdaAfr(); recalc(); } });
+
+  // ---------- Fuel type ----------
+  els.fuel.addEventListener('change', function () {
+    var isCustom = els.fuel.value === 'custom';
+    els.customFuelRow.hidden = !isCustom;
+    els.fuelRefHint.textContent = isCustom
+      ? 'Enter your fuel’s stoichiometric AFR above. BSFC field is optional and for your reference only.'
+      : 'Reference BSFC: ' + FUEL_TYPES[els.fuel.value].refBsfc + '. Not used in this calculation — shown for cross-checking against dyno numbers, since the math below is airflow-based, not BSFC-based.';
+    syncLambdaAfr();
+    recalc();
+  });
+
+  // ---------- Fuel system toggle ----------
+  els.fuelSystemToggle.addEventListener('click', function (e) {
+    var btn = e.target.closest('.injcalc__toggle-btn');
+    if (!btn) return;
+    fuelSystemMode = btn.getAttribute('data-mode');
+    Array.prototype.forEach.call(els.fuelSystemToggle.children, function (b) {
+      b.classList.toggle('is-active', b === btn);
+    });
+    recalc();
+  });
+
+  // ---------- Core formulas (verified against 2 independent public sources this session) ----------
+  function cfmAt(rpm, ve, cid) {
+    return (ve / 100) * cid * rpm / 3456;
+  }
+  function airLbPerMinAt(rpm, ve, cid, boostPsi) {
+    var cfm = cfmAt(rpm, ve, cid);
+    var densityRatio = (boostPsi + 14.7) / 14.7;
+    return cfm * 0.0765 * densityRatio;
+  }
+  function actualDeltaP(basePressure, boostPsi) {
+    if (fuelSystemMode === 'referenced') return basePressure;
+    return Math.max(basePressure - boostPsi, 1);
+  }
+  function requiredFlowPerInjector(rpm, params) {
+    var airLbMin = airLbPerMinAt(rpm, params.ve, params.cid, params.boost);
+    var afr = params.lambda * params.stoichAFR;
+    var fuelLbHr = (airLbMin * 60) / afr;
+    return fuelLbHr / params.numInjectors;
+  }
+  function dutyCycleForInjector(rpm, params, injectorRatedFlowLbHr) {
+    var required = requiredFlowPerInjector(rpm, params);
+    var dp = actualDeltaP(params.fuelPressure, params.boost);
+    var actualFlowAtDp = injectorRatedFlowLbHr * Math.sqrt(dp / params.ratedDp);
+    return (required / actualFlowAtDp) * 100;
+  }
+  function minInjectorSize(rpm, params) {
+    var required = requiredFlowPerInjector(rpm, params);
+    var dp = actualDeltaP(params.fuelPressure, params.boost);
+    // required static (rated-ΔP) flow so that actual flow at operating ΔP / dutyTarget covers demand
+    return (required / (params.dutyTarget / 100)) * Math.sqrt(params.ratedDp / dp);
+  }
+
+  function readParams() {
+    return {
+      cid: parseFloat(els.cid.value) || 1,
+      cyl: parseInt(els.cyl.value, 10) || 1,
+      ve: parseFloat(els.ve.value) || 100,
+      boost: parseFloat(els.boost.value) || 0,
+      lambda: currentLambda(),
+      stoichAFR: currentStoichAFR(),
+      fuelPressure: parseFloat(els.fuelPressure.value) || 43.5,
+      redline: parseInt(els.redline.value, 10) || 7000,
+      dutyTarget: parseFloat(els.dutyTarget.value) || 85,
+      ratedDp: parseFloat(els.ratedDp.value) || 43.5,
+      numInjectors: totalInjectors()
+    };
+  }
+
+  function totalInjectors() {
+    var sets = parseInt(els.setCount.value, 10) || 1;
+    var total = parseInt(els.set1.value, 10) || 1;
+    if (sets >= 2) total += parseInt(els.set2.value, 10) || 1;
+    if (sets >= 3) total += parseInt(els.set3.value, 10) || 1;
+    return total;
+  }
+
+  function updateSetFieldVisibility() {
+    var sets = parseInt(els.setCount.value, 10) || 1;
+    els.set2Wrap.hidden = sets < 2;
+    els.set3Wrap.hidden = sets < 3;
+    els.setFieldsRow.setAttribute('data-visible', String(sets));
+  }
+  els.setCount.addEventListener('change', function () {
+    updateSetFieldVisibility();
+    recalc();
+  });
+
+  // keep "Injectors in Set 1" in sync with cylinder count (capped at 8) unless user overrides it
+  var set1Touched = false;
+  els.set1.addEventListener('input', function () { set1Touched = true; });
+  els.cyl.addEventListener('input', function () {
+    if (!set1Touched) els.set1.value = Math.min(parseInt(els.cyl.value, 10) || 8, 8);
+  });
+
+  // ---------- Chart + table ----------
+  function sampleRpms(redline) {
+    var start = Math.max(2000, Math.round(redline * 0.4 / 250) * 250);
+    var pts = [];
+    var step = Math.max(250, Math.round((redline - start) / 16 / 250) * 250) || 250;
+    for (var r = start; r <= redline; r += step) pts.push(r);
+    if (pts[pts.length - 1] !== redline) pts.push(redline);
+    return pts;
+  }
+
+  function renderChart(rpms, series) {
+    // series: [{ label, values: [duty%...], color }]
+    var w = 600, h = 260, padL = 44, padR = 12, padT = 12, padB = 28;
+    var maxDuty = 100;
+    series.forEach(function (s) { s.values.forEach(function (v) { if (v > maxDuty) maxDuty = v; }); });
+    maxDuty = Math.min(Math.ceil(maxDuty / 10) * 10, 200);
+
+    function x(rpm) { return padL + (rpm - rpms[0]) / (rpms[rpms.length - 1] - rpms[0] || 1) * (w - padL - padR); }
+    function y(duty) { return h - padB - (duty / maxDuty) * (h - padT - padB); }
+
+    var svgParts = [];
+    svgParts.push('<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (h - padB) + '" stroke="var(--partmash-border)" stroke-width="1"/>');
+    svgParts.push('<line x1="' + padL + '" y1="' + (h - padB) + '" x2="' + (w - padR) + '" y2="' + (h - padB) + '" stroke="var(--partmash-border)" stroke-width="1"/>');
+
+    var refY = y(85);
+    svgParts.push('<line x1="' + padL + '" y1="' + refY + '" x2="' + (w - padR) + '" y2="' + refY + '" stroke="var(--partmash-red-dark)" stroke-width="1" stroke-dasharray="4 3"/>');
+    svgParts.push('<text x="' + (w - padR) + '" y="' + (refY - 4) + '" text-anchor="end" font-size="10" fill="var(--partmash-red-bright)">85% duty</text>');
+
+    svgParts.push('<text x="4" y="' + (padT + 4) + '" font-size="10" fill="var(--partmash-silver)">' + maxDuty + '%</text>');
+    svgParts.push('<text x="4" y="' + (h - padB) + '" font-size="10" fill="var(--partmash-silver)">0%</text>');
+    svgParts.push('<text x="' + padL + '" y="' + (h - 6) + '" font-size="10" fill="var(--partmash-silver)">' + rpms[0].toLocaleString() + '</text>');
+    svgParts.push('<text x="' + (w - padR) + '" y="' + (h - 6) + '" text-anchor="end" font-size="10" fill="var(--partmash-silver)">' + rpms[rpms.length - 1].toLocaleString() + ' rpm</text>');
+
+    var colors = ['#ff1a1a', '#e8e8e8', '#ffb020', '#3aa0ff'];
+    series.forEach(function (s, i) {
+      var pts = rpms.map(function (r, idx) { return x(r) + ',' + y(s.values[idx]); }).join(' ');
+      svgParts.push('<polyline points="' + pts + '" fill="none" stroke="' + (s.color || colors[i % colors.length]) + '" stroke-width="2.5"/>');
+    });
+
+    els.chart.innerHTML = svgParts.join('');
+  }
+
+  function renderTable(rpms, series) {
+    var head = '<thead><tr><th>Injector</th>' + rpms.map(function (r) { return '<th>' + r.toLocaleString() + '</th>'; }).join('') + '</tr></thead>';
+    var rows = series.map(function (s) {
+      return '<tr><td>' + s.label + '</td>' + s.values.map(function (v) {
+        var cls = v > 90 ? 'is-danger' : (v > 80 ? 'is-warning' : '');
+        return '<td class="' + cls + '">' + v.toFixed(1) + '%</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    els.table.innerHTML = head + '<tbody>' + rows + '</tbody>';
+  }
+
+  // ---------- Product matching ----------
+  function renderProducts(minFlow, needed) {
+    needed = Math.max(1, parseInt(needed, 10) || 8);
+    // ⚠️ flowLbHr arrives from the metafield as a STRING - compare and sort numerically
+    var matches = CATALOG.filter(function (p) { return parseFloat(p.flowLbHr) >= minFlow; })
+      .sort(function (a, b) { return parseFloat(a.flowLbHr) - parseFloat(b.flowLbHr); });
+
+    // ⛔ Never let a catalog that has not arrived read as "nothing we sell fits".
+    if (LOAD_STATE === 'loading') {
+      els.productsList.innerHTML = '<p class="injcalc__no-match">Loading matching injectors…</p>';
+      return;
+    }
+
+    if (LOAD_STATE === 'error') {
+      els.productsList.innerHTML =
+        '<p class="injcalc__no-match">We could not load the injector catalog just now. ' +
+        'The ' + minFlow.toFixed(0) + ' lb/hr figure above is still correct — call us with it ' +
+        'and we’ll pick the injector.</p>' +
+        '<div class="injcalc__cta-row">' +
+        '<a href="tel:9287066112" class="btn btn--primary">Call 928-706-6112</a>' +
+        '<a href="https://www.theefistore.com/pages/get-an-appointment" class="btn btn--outline">Book Tuning</a>' +
+        '</div>';
+      return;
+    }
+
+    if (CATALOG.length === 0) {
+      els.productsList.innerHTML =
+        '<p class="injcalc__no-match">We don’t have injectors listed in the store catalog yet. ' +
+        'Give us a call and we’ll help you source and install the right ones for this combo.</p>' +
+        '<div class="injcalc__cta-row">' +
+        '<a href="tel:9287066112" class="btn btn--primary">Call 928-706-6112</a>' +
+        '<a href="https://www.theefistore.com/pages/get-an-appointment" class="btn btn--outline">Book Tuning</a>' +
+        '</div>';
+      return;
+    }
+
+    if (matches.length === 0) {
+      els.productsList.innerHTML =
+        '<p class="injcalc__no-match">Nothing in our current catalog covers ' + minFlow.toFixed(0) + ' lb/hr yet — ' +
+        'call us and we’ll help source the right injector for this build.</p>' +
+        '<div class="injcalc__cta-row">' +
+        '<a href="tel:9287066112" class="btn btn--primary">Call 928-706-6112</a>' +
+        '<a href="https://www.theefistore.com/pages/get-an-appointment" class="btn btn--outline">Book Tuning</a>' +
+        '</div>';
+      return;
+    }
+
+    // Group by flow size. The smallest size that clears the requirement is the
+    // recommendation; each size then lists the packs you can actually buy, because
+    // the same injector ships as a single, a set of 6, a set of 8 and so on.
+    var groups = {};
+    matches.forEach(function (p) {
+      var f = parseFloat(p.flowLbHr);
+      (groups[f] = groups[f] || []).push(p);
+    });
+    var sizes = Object.keys(groups).map(parseFloat).sort(function (a, b) { return a - b; });
+    var recommended = sizes[0];
+
+    var html = '';
+    sizes.slice(0, 3).forEach(function (f) {
+      var isRec = f === recommended;
+      var packs = groups[f].slice().sort(function (a, b) { return packQty(a) - packQty(b); });
+
+      html += '<div class="injcalc__size-group' + (isRec ? ' is-recommended' : '') + '">';
+      html += '<p class="injcalc__size-head">' +
+              (isRec ? '<span class="injcalc__rec-flag">Recommended</span> ' : '') +
+              '<strong>' + f + ' lb/hr</strong> <span>(' + Math.round(f * 10.5) + ' cc/min) · ' +
+              packs[0].vendor + '</span></p>';
+
+      html += '<ul class="injcalc__pack-list">';
+      packs.forEach(function (p) {
+        var per = packQty(p);                             // injectors per box
+        var boxes = Math.max(1, Math.ceil(needed / per)); // boxes to cover the build
+        var gets = boxes * per;
+
+        // Label by what actually differs between same-flow injectors. Fall back to
+        // the trimmed title when a product states no connector or dimensions.
+        var specs = injectorSpecs(p);
+        var label = specs.length ? specs.join(' · ') : String(p.title)
+          .replace(new RegExp('^\\s*' + String(p.vendor).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[-–—:]?\\s*', 'i'), '')
+          .replace(/\s*[-–—]\s*\d+(\.\d+)?\s*(lb\s*\/?\s*h(r|our)?|cc(\/min)?)\b/i, '')
+          .replace(/\s*[-–—]?\s*(set of\s*(\d{1,2}|[a-z]+)|(\d{1,2}|[a-z]+)\s*[-\s]?pack|individual|single)\s*(injectors?)?\s*$/i, '')
+          .replace(/\s{2,}/g, ' ').trim() || 'Injector';
+
+        html += '<li class="injcalc__pack">' +
+                '<a class="injcalc__pack-name" href="' + p.url + '" title="' + esc(p.title) + '">' +
+                  '<span class="injcalc__pack-brand">' + esc(p.vendor) + '</span> ' + esc(label) +
+                '</a>' +
+                '<span class="injcalc__pack-qty">' + (per > 1 ? 'Set of ' + per : 'Single') + '</span>' +
+                '<span class="injcalc__pack-price">' + (p.price != null ? money(p.price) : '') + '</span>' +
+                (p.available && p.variantId
+                  ? '<form action="/cart/add" method="post" enctype="multipart/form-data" class="injcalc__buy">' +
+                    '<input type="hidden" name="id" value="' + p.variantId + '">' +
+                    '<label class="injcalc__qty-wrap" title="Boxes to add. ' + boxes + ' × ' + per +
+                      ' = ' + gets + ' injectors for your ' + needed + '-injector build.">' +
+                      '<span>Qty</span>' +
+                      '<input type="number" name="quantity" class="injcalc__qty" value="' + boxes +
+                        '" min="1" max="99" step="1">' +
+                    '</label>' +
+                    '<button type="submit" class="btn btn--primary injcalc__add">Add to cart</button>' +
+                    '</form>'
+                  : '<span class="injcalc__pack-oos">Call to order</span>') +
+                '</li>';
+      });
+      html += '</ul></div>';
+    });
+
+    html += '<div class="injcalc__cta-row">' +
+            '<a href="https://www.theefistore.com/pages/get-an-appointment" class="btn btn--outline">Get It Tuned Right</a>' +
+            '<a href="tel:9287066112" class="btn btn--outline">928-706-6112</a>' +
+            '</div>';
+    els.productsList.innerHTML = html;
+  }
+
+  // ---------- Main recalc ----------
+  function recalc() {
+    var params = readParams();
+    var rpms = sampleRpms(params.redline);
+    var series = [];
+
+    var minFlow = minInjectorSize(params.redline, params);
+    els.headline.textContent = minFlow.toFixed(0) + ' lb/hr';
+    els.headlineSub.textContent = 'at ' + params.redline.toLocaleString() + ' rpm, ' + params.dutyTarget + '% max duty, ' + params.numInjectors + ' injectors';
+
+    // duty curve for a "just-adequate" injector rated at exactly minFlow
+    var genericValues = rpms.map(function (r) {
+      var required = requiredFlowPerInjector(r, params);
+      var dp = actualDeltaP(params.fuelPressure, params.boost);
+      var actualFlowAtDp = minFlow * Math.sqrt(dp / params.ratedDp);
+      return (required / actualFlowAtDp) * 100;
+    });
+    series.push({ label: 'Min. Recommended (' + minFlow.toFixed(0) + ' lb/hr)', values: genericValues, color: '#e8e8e8' });
+
+    if (selectedInjector) {
+      els.pickedCard.hidden = false;
+      var pickedValues = rpms.map(function (r) { return dutyCycleForInjector(r, params, selectedInjector.flowLbHr); });
+      series.push({ label: selectedInjector.title + ' (' + selectedInjector.flowLbHr + ' lb/hr)', values: pickedValues, color: '#ff1a1a' });
+
+      var pickedAtRedline = dutyCycleForInjector(params.redline, params, selectedInjector.flowLbHr);
+      els.pickedTitle.textContent = selectedInjector.vendor + ' ' + selectedInjector.title;
+      if (pickedAtRedline > 100) {
+        els.pickedVerdict.innerHTML = '<span class="injcalc__verdict injcalc__verdict--fail">Not enough — ' + pickedAtRedline.toFixed(0) + '% duty at redline (over 100%)</span>';
+      } else if (pickedAtRedline > params.dutyTarget) {
+        els.pickedVerdict.innerHTML = '<span class="injcalc__verdict injcalc__verdict--warn">Cutting it close — ' + pickedAtRedline.toFixed(0) + '% duty at redline</span>';
+      } else {
+        els.pickedVerdict.innerHTML = '<span class="injcalc__verdict injcalc__verdict--ok">Good headroom — ' + pickedAtRedline.toFixed(0) + '% duty at redline</span>';
+      }
+    } else {
+      els.pickedCard.hidden = true;
+    }
+
+    renderChart(rpms, series);
+    renderTable(rpms, series);
+    renderProducts(minFlow, params.numInjectors);
+  }
+
+  // ---------- Init ----------
+  // Draw the calculator immediately - it needs no catalog to be useful - then fill the
+  // product side in when the asset lands.
+  function loadCatalog() {
+    return fetch(CATALOG_URL, { credentials: 'same-origin' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (d) {
+        // Tolerate both shapes: the versioned document and a bare array.
+        var list = Array.isArray(d) ? d : (d && d.injectors) || [];
+        CATALOG = list.filter(function (p) { return p && isFinite(parseFloat(p.flowLbHr)); });
+        LOAD_STATE = 'ok';
+      })
+      .catch(function (err) {
+        // ⛔ never let a failed load read as "nothing matches"
+        CATALOG = [];
+        LOAD_STATE = 'error';
+        LOAD_ERROR = err.message;
+      })
+      .then(function () {
+        var brandWas = els.brand.value;
+        populateBrands();
+        if (brandWas) els.brand.value = brandWas;
+        populatePicksForBrand(els.brand.value);
+        preselectFromQuery();
+        recalc();
+      });
+  }
+
+  populateBrands();
+  populatePicksForBrand('');
+  preselectFromQuery();
+  syncLambdaAfr();
+  updateSetFieldVisibility();
+  els.form.addEventListener('input', recalc);
+  recalc();
+  loadCatalog();
+})();
+</script>
+</body>
+</html>
