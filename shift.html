@@ -1571,11 +1571,24 @@ const GV_RATIO = 0.78;
    into engine speed just like a gear does. The driveshaft still turns with road speed and the
    final drive alone, so the critical-speed panel is untouched by any of this. */
 const gvRatioOf = g => ratioOf(g) * GV_RATIO;
-/* ⭐ Gear Vendors' own application guide: automatics 2-5 speed, manuals 4-6 speed. Nothing
-   above that is a listed kit - no 6-speed automatic, and no 8- or 10-speed at all. */
+/* ⭐ The transmissions Gear Vendors publish a kit for, read off all nine pages of their
+   application guide. Narrower than a gear-count rule would suggest: the 200-4R, AOD/AODE,
+   4R70W, 42RLE and 545RFE are absent, as is every modern manual - their own FAQ argues the
+   old 4-speeds are the better base, so T56/TKX/Magnum/MT82 are not kits they sell.
+     autos   Powerglide, ST-300, TH350, TH375/400, 727, 904, C4, C6, FMX, 700R4/4L60,
+             4L60E, 4L80E, E4OD/4R100, 518, 47RH/47RE, 5R110W
+     manuals Muncie M20/21/22, Borg-Warner Super T-10, Toploader, A833, M-420, M-465,
+             NP435, T-18/19, NV4500, NV5600, G56, ZF, Getrag
+   ⚠️ "Custom applications are available for many vehicles not listed here - call GEAR
+   VENDORS." So this means "no published kit", not "cannot be done". Custom stays open
+   because the ratios are the operator's own. */
+const GV_FITS = {
+  auto:   ["PG", "TH350", "TH400", "700R4", "4L60E", "4L80E", "C4", "C6",
+           "E4OD", "A904", "A727", "A518", "A618", "CUSTOM"],
+  manual: ["M20", "M21", "M22", "ST10", "TOPLOAD", "A833", "CUSTOM"]
+};
 function gvAvailable() {
-  const n = S.ratios.length;
-  return S.type === "manual" ? (n >= 4 && n <= 6) : (n >= 2 && n <= 5);
+  return GV_FITS[S.type].indexOf(S.transKey) !== -1;
 }
 const gvIn      = g => gvAvailable() && S.gvOn && !!S.gvGears[g - 1];
 const gvActive  = () => gvAvailable() && S.gvOn && S.gvGears.some(Boolean);
