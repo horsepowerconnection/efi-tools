@@ -2858,6 +2858,15 @@ function init() {
     e.target.value = String(Math.round(S.redline));
     rebuild(true);
   });
+
+  /* ⭐ The rest of the autofill defines the table just as much as the rpm band does, so they
+     apply on commit too. Build Table stays for when you have hand-edited cells and want the
+     whole thing put back on the band. */
+  ["afLo", "afHyst", "afFloor"].forEach(id => onCommit($(id), e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v) && v >= 0) e.target.value = String(v);
+    rebuild(true);
+  }));
   onCommit($("stall"), e => {
     const v = parseFloat(e.target.value);
     const had = S.stall > 0;
