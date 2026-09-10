@@ -2421,9 +2421,11 @@ function driveshaftRpm(mph) {
   return S.tire ? mph * K * S.fdr / S.tire : 0;
 }
 
-/* Fastest the shaft ever turns is top gear at redline. */
+/* Fastest the shaft ever turns is top gear at redline - and an auxiliary overdrive in top
+   makes that meaningfully faster, which is precisely when a long shaft goes critical. */
 function topSpeedMph() {
-  return rpmToMph(S.redline, S.ratios.length);
+  const g = S.ratios.length;
+  return gvIn(g) ? rpmToMphRatio(S.redline, g, gvRatioOf(g)) : rpmToMph(S.redline, g);
 }
 
 /* ⭐ The road speed at which the shaft goes critical is the honest headline: it falls out
@@ -2442,7 +2444,7 @@ function renderDs() {
   const pct  = nc > 0 ? ds / nc * 100 : 0;
   const id   = S.dsOD - 2 * S.dsWall;
   const top  = S.ratios.length;
-  const ord  = top + (["st","nd","rd"][top - 1] || "th");
+  const ord  = ordOf(top) + (gvIn(top) ? "-over" : "");
   const col  = pct >= 85 ? "var(--red-lit)" : pct >= 70 ? "var(--amber)" : "var(--green)";
   const dash = "—";
 
