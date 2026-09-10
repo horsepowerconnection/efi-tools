@@ -1571,14 +1571,21 @@ const GV_RATIO = 0.78;
    into engine speed just like a gear does. The driveshaft still turns with road speed and the
    final drive alone, so the critical-speed panel is untouched by any of this. */
 const gvRatioOf = g => ratioOf(g) * GV_RATIO;
-const gvIn      = g => S.gvOn && !!S.gvGears[g - 1];
-const gvActive  = () => S.gvOn && S.gvGears.some(Boolean);
+/* ⭐ Gear Vendors' own application guide: automatics 2-5 speed, manuals 4-6 speed. Nothing
+   above that is a listed kit - no 6-speed automatic, and no 8- or 10-speed at all. */
+function gvAvailable() {
+  const n = S.ratios.length;
+  return S.type === "manual" ? (n >= 4 && n <= 6) : (n >= 2 && n <= 5);
+}
+const gvIn      = g => gvAvailable() && S.gvOn && !!S.gvGears[g - 1];
+const gvActive  = () => gvAvailable() && S.gvOn && S.gvGears.some(Boolean);
 
 /* ⭐ Default to every gear that is not already an overdrive. Gear Vendors ship "double
    overdrive canceling for vehicles where double overdrive would not be useful", so the
    factory OD gear starts unticked - but it is one tick away, because on a tall-geared
    truck double overdrive is exactly the point. */
 function defaultGv() {
+  if (!gvAvailable()) { S.gvOn = false; S.gvGears = S.ratios.map(() => false); return; }
   S.gvGears = S.ratios.map(r => r >= 1);
   if (!S.gvGears.some(Boolean)) S.gvGears = S.ratios.map(() => true);
 }
@@ -1601,7 +1608,11 @@ function renderGvPick() {
       renderGv(); renderTable();
     });
   });
-  $("gvBody").style.display = S.gvOn ? "" : "none";
+  const avail = gvAvailable();
+  $("gvField").style.display = avail ? "" : "none";   // no kit, no control
+  if (!avail) S.gvOn = false;
+  $("gvOn").checked = S.gvOn;
+  $("gvBody").style.display = (avail && S.gvOn) ? "" : "none";
 }
 
 function renderGv() {
