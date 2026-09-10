@@ -500,7 +500,12 @@ h1, h2, h3, h4, h5, h6,
   font-family:var(--font-display);font-size:15px;font-weight:700;
   letter-spacing:.16em;text-transform:uppercase;margin:0;color:var(--ink-dim);
 }/* ---------- setup rail ---------- */
-.shiftcalc .rail-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule-soft)}.shiftcalc .field{background:var(--panel);padding:10px 13px 12px;display:flex;flex-direction:column;gap:5px}.shiftcalc .field label,.shiftcalc .lbl{
+.shiftcalc .rail-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:1px;background:var(--rule-soft)}/* "wide" finally means something - it was styling nothing before */
+.shiftcalc .field.wide{grid-column:span 2}.shiftcalc .field.full{grid-column:1/-1}/* A full-width field runs horizontally: name and hint on the left, the wide control in the
+   middle, any single number pinned to the right. */
+.shiftcalc .fullrow{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}.shiftcalc .fullrow__lead{flex:0 0 auto;width:300px;display:flex;flex-direction:column;gap:4px}.shiftcalc .fullrow__lead .hint{margin:0}.shiftcalc .fullrow__mid{flex:1 1 340px;display:flex;flex-direction:column;gap:6px;min-width:0}.shiftcalc .fullrow__num{flex:0 0 auto;width:130px;display:flex;flex-direction:column;gap:3px}
+@media (max-width:900px){.shiftcalc .field.wide,.shiftcalc .field.full{grid-column:1/-1}.shiftcalc .fullrow{gap:10px}.shiftcalc .fullrow__lead{width:auto;flex:1 1 100%}.shiftcalc .fullrow__num{width:100%}
+}.shiftcalc .field{background:var(--panel);padding:10px 13px 12px;display:flex;flex-direction:column;gap:5px}.shiftcalc .field label,.shiftcalc .lbl{
   font-family:var(--font-display);font-size:11.5px;font-weight:600;
   letter-spacing:.15em;text-transform:uppercase;color:var(--desc);
 }.shiftcalc .field .hint{font-size:11px;color:var(--desc);font-family:var(--font-body);letter-spacing:0}.shiftcalc input[type=number],.shiftcalc input[type=text],.shiftcalc select{
@@ -512,10 +517,10 @@ h1, h2, h3, h4, h5, h6,
   font-family:var(--font-display);font-size:9.5px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--desc);text-align:center;white-space:nowrap;
 }.shiftcalc .tiregrid input{padding:6px 3px;text-align:center;font-size:13.5px;min-width:0}/* a locked box and its label both stay dim — that is what reads as "not yours to type in" */
-.shiftcalc input.derived{background:#13171F;color:var(--muted);border-style:dashed;cursor:default}.shiftcalc .subf:has(input.derived) .mini{color:var(--muted)}.shiftcalc .seg.sm button{padding:4px 9px;font-size:11px;letter-spacing:.1em}.shiftcalc .duosel{display:grid;grid-template-columns:1.55fr 1fr;gap:5px}.shiftcalc .duosel select{min-width:0;text-overflow:ellipsis}.shiftcalc .dsgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.shiftcalc .dsgrid input,.shiftcalc .dsgrid select{padding:6px 3px;text-align:center;font-size:13.5px;min-width:0}.shiftcalc .gvtoggle{display:flex;align-items:center;gap:9px;margin-top:9px;cursor:pointer;user-select:none;
+.shiftcalc input.derived{background:#13171F;color:var(--muted);border-style:dashed;cursor:default}.shiftcalc .subf:has(input.derived) .mini{color:var(--muted)}.shiftcalc .seg.sm button{padding:4px 9px;font-size:11px;letter-spacing:.1em}.shiftcalc .duosel{display:grid;grid-template-columns:1.55fr 1fr;gap:5px}.shiftcalc .duosel select{min-width:0;text-overflow:ellipsis}.shiftcalc .dsgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.shiftcalc .dsgrid input,.shiftcalc .dsgrid select{padding:6px 3px;text-align:center;font-size:13.5px;min-width:0}.shiftcalc .gvtoggle{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;
   font-family:var(--font-display);font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-dim)}.shiftcalc .gvtoggle input{margin:0;accent-color:var(--amber)}.shiftcalc .gvtoggle .gvratio{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);
-  border:1px solid var(--rule);border-radius:3px;padding:1px 5px;letter-spacing:0}.shiftcalc #gvBody{margin-top:9px;display:flex;flex-direction:column;gap:7px}.shiftcalc .tccpick{display:flex;gap:5px;flex-wrap:wrap}.shiftcalc .tccpick label{display:flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid var(--rule);
+  border:1px solid var(--rule);border-radius:3px;padding:1px 5px;letter-spacing:0}.shiftcalc .tccpick{display:flex;gap:5px;flex-wrap:wrap}.shiftcalc .tccpick label{display:flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid var(--rule);
   border-radius:4px;background:var(--panel-2);cursor:pointer;font-size:13px;color:var(--ink-dim);
   font-family:var(--font-display);letter-spacing:.06em;text-transform:uppercase;user-select:none}.shiftcalc .tccpick label.on{border-color:var(--amber);color:var(--ink)}.shiftcalc .tccpick input{margin:0;accent-color:var(--amber)}.shiftcalc .strip{display:flex;gap:1px;background:var(--rule-soft);border-top:1px solid var(--rule);overflow-x:auto}.shiftcalc .cellbox{background:var(--panel);padding:8px 10px 9px;min-width:80px;flex:1 0 80px;display:flex;flex-direction:column;gap:3px}.shiftcalc .cellbox .gn{font-family:var(--font-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--desc);white-space:nowrap}.shiftcalc .cellbox input{padding:4px 5px;text-align:center;font-size:13.5px}.shiftcalc .cellbox .v{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums}.shiftcalc .cellbox .u{font-size:10.5px;color:var(--desc);font-family:var(--font-body);white-space:nowrap}/* ---------- control bars ---------- */
 .shiftcalc .toolbar{
@@ -549,7 +554,9 @@ h1, h2, h3, h4, h5, h6,
 }.shiftcalc .duo .mph{font-size:13.5px;font-weight:700;padding-top:5px}.shiftcalc .duo .rpm{
   font-size:10.5px;font-weight:500;color:rgba(14,16,19,.66);
   border-top:1px solid rgba(14,16,19,.16);padding-bottom:5px;letter-spacing:-.02em;
-}.shiftcalc .duo input:hover{background:rgba(255,255,255,.22)}.shiftcalc .duo input:focus{outline:2px solid var(--on-heat);outline-offset:-2px;background:rgba(255,255,255,.3)}.shiftcalc tbody td.bad{box-shadow:inset 0 0 0 2px var(--red-lit)}.shiftcalc tbody td.understall{box-shadow:inset 0 0 0 2px var(--amber)}.shiftcalc #wotTbl td{min-width:0}.shiftcalc #wotTbl .we input{
+}.shiftcalc .duo input:hover{background:rgba(255,255,255,.22)}.shiftcalc .duo input:focus{outline:2px solid var(--on-heat);outline-offset:-2px;background:rgba(255,255,255,.3)}.shiftcalc tbody td.bad{box-shadow:inset 0 0 0 2px var(--red-lit)}.shiftcalc tbody td.understall{box-shadow:inset 0 0 0 2px var(--amber)}/* The aux rows are events, not gear changes - name them in a different colour so the eye
+   does not read them as another shift. */
+.shiftcalc tbody tr.tcc>th,.shiftcalc tbody tr.gv>th{color:var(--amber)}.shiftcalc tbody tr.tcc>th::before{content:"";}.shiftcalc tbody tr.gv>th{color:var(--blue)}.shiftcalc #wotTbl td{min-width:0}.shiftcalc #wotTbl .we input{
   width:100%;background:#0B0D10;border:1px solid var(--rule);border-radius:2px;
   color:var(--ink);font-family:var(--font-mono);font-size:14px;font-weight:700;
   text-align:center;padding:7px 6px;font-variant-numeric:tabular-nums;
@@ -796,17 +803,6 @@ h1, h2, h3, h4, h5, h6,
           <div class="subf"><span class="mini">Model</span><select id="trans"></select></div>
           <div class="subf"><span class="mini">Gear set</span><select id="gearset" aria-label="Gear set"></select></div>
         </div>
-        <label class="gvtoggle" for="gvOn">
-          <input type="checkbox" id="gvOn">
-          <span>Gear Vendors auxiliary overdrive</span>
-          <span class="gvratio">0.78:1</span>
-        </label>
-        <div id="gvBody" style="display:none">
-          <div class="tccpick" id="gvPick"></div>
-          <span class="hint">Tick every gear the unit may split. It bolts behind the gearbox, so
-            each ticked gear gains an over ratio &mdash; 1st, 1st-over, 2nd, 2nd-over and so on.
-            An overdrive gear starts unticked because that would be double overdrive.</span>
-        </div>
         <span class="hint" id="gearcount">4 forward gears</span>
         <span class="hint" id="transNote" style="color:var(--amber)"></span>
       </div>
@@ -825,15 +821,41 @@ h1, h2, h3, h4, h5, h6,
         <input type="number" id="slip" value="0" step="1" min="0" max="35">
         <span class="hint" id="slipHint">% — converter slip, raises engine rpm</span>
       </div>
-      <div class="field wide" id="tccField">
-        <label>Converter Lockup</label>
-        <div class="tccpick" id="tccPick"></div>
-        <span class="hint" id="tccHint">TCC — tick every gear the converter may lock in. Slip goes to zero once it locks.</span>
+      <div class="field full" id="tccField">
+        <div class="fullrow">
+          <div class="fullrow__lead">
+            <label>Converter Lockup</label>
+            <span class="hint" id="tccHint">Tick every gear the converter may lock in. Slip goes
+              to zero once the clutch is in, so the rpm above that speed is the real engine speed.</span>
+          </div>
+          <div class="fullrow__mid">
+            <div class="tccpick" id="tccPick"></div>
+          </div>
+          <div class="fullrow__num" id="tccMphField">
+            <span class="mini">Locks at mph</span>
+            <input type="number" id="tccMph" value="45" step="1" min="5" max="140"
+                   aria-label="Road speed the torque converter clutch applies, mph">
+          </div>
+        </div>
       </div>
-      <div class="field" id="tccMphField">
-        <label for="tccMph">Locks At</label>
-        <input type="number" id="tccMph" value="45" step="1" min="5" max="140">
-        <span class="hint">mph — road speed the clutch applies</span>
+
+      <div class="field full" id="gvField">
+        <div class="fullrow">
+          <div class="fullrow__lead">
+            <label class="gvtoggle" for="gvOn">
+              <input type="checkbox" id="gvOn">
+              <span>Gear Vendors</span>
+              <span class="gvratio">0.78:1</span>
+            </label>
+            <span class="hint">Auxiliary overdrive bolted behind the gearbox. Every ticked gear
+              gains an over ratio &mdash; 1st, 1st-over, 2nd, 2nd-over and so on.</span>
+          </div>
+          <div class="fullrow__mid" id="gvBody" style="display:none">
+            <div class="tccpick" id="gvPick"></div>
+            <span class="hint">An overdrive gear starts unticked, because using it there is
+              double overdrive.</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1254,7 +1276,7 @@ const S = {
   axis: 16, gy: "MPH", tsvUnit: "MPH", tsvFmt: "hpt", tsvMap: "1", tsvDrop: 800, tsvDropMode: "rpm",
   show: "both", focus: -1, snap: true,
   dsLen: 52, dsOD: 3.5, dsWall: 0.083, dsMat: "steel",
-  up: [], down: []
+  up: [], down: [], tccRow: [], gvRow: []
 };
 
 const $ = id => document.getElementById(id);
@@ -1311,11 +1333,20 @@ const shiftCount = () => Math.max(0, S.ratios.length - 1);
 const ratioOf    = g => S.ratios[g - 1] || 1;
 
 /* Row j leaves gear j+1 for j+2 on an upshift, and the reverse coming back down. */
-const gearsFor = (kind, j) => kind === "up"
-  ? { from: j + 1, to: j + 2 }
-  : { from: j + 2, to: j + 1 };
+/* The tallest gear each aux event applies in - that is the one worth showing rpm for. */
+const topLockGear = () => { for (let g = S.ratios.length; g >= 1; g--) if (locksIn(g)) return g; return S.ratios.length; };
+const topGvGear   = () => { for (let g = S.ratios.length; g >= 1; g--) if (gvIn(g))   return g; return S.ratios.length; };
 
-const rowLabel  = (kind, j) => { const g = gearsFor(kind, j); return `${g.from} → ${g.to} Shift`; };
+const gearsFor = (kind, j) =>
+  kind === "up"   ? { from: j + 1, to: j + 2 } :
+  kind === "down" ? { from: j + 2, to: j + 1 } :
+  kind === "tcc"  ? (g => ({ from: g, to: g }))(topLockGear())
+                  : (g => ({ from: g, to: g }))(topGvGear());
+
+const rowLabel  = (kind, j) =>
+  kind === "tcc" ? `${ordOf(topLockGear())} TCC Lock`
+: kind === "gv"  ? `${ordOf(topGvGear())} Gear Vendors`
+: `${gearsFor(kind, j).from} → ${gearsFor(kind, j).to} Shift`;
 const pairLabel = j => `${j + 1}-${j + 2}`;
 
 const snap   = v => S.snap ? Math.round(v) : Math.round(v * 10) / 10;
@@ -1382,6 +1413,11 @@ function buildTables() {
     rows.map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), j + 1)))
   );
   S.down = S.up.map(r => r.map(v => snap(Math.max(floor, v - hyst))));
+  /* The lockup point is flat by default - it is a calibration threshold, not a shift curve,
+     and a tuner who wants it to climb with throttle is better off saying so explicitly.
+     The Gear Vendors gets the same autofill curve as an upshift, because that is what it is. */
+  S.tccRow = rows.map(() => snap(S.tccMph));
+  S.gvRow  = rows.map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), topGvGear())));
   buildWot();
 }
 
@@ -1396,6 +1432,8 @@ function reaxis(oldRows, newRows) {
   }));
   S.up = lerp(S.up);
   S.down = lerp(S.down);
+  if (S.tccRow && S.tccRow.length) S.tccRow = lerp([S.tccRow])[0];
+  if (S.gvRow  && S.gvRow.length)  S.gvRow  = lerp([S.gvRow])[0];
 }
 
 /* ============================================================
@@ -1535,7 +1573,7 @@ function renderGvPick() {
       const g = +e.target.closest("label").dataset.g;
       S.gvGears[g - 1] = e.target.checked;
       e.target.closest("label").classList.toggle("on", e.target.checked);
-      renderGv();
+      renderGv(); renderTable();
     });
   });
   $("gvBody").style.display = S.gvOn ? "" : "none";
@@ -1667,7 +1705,7 @@ function renderTccPick() {
       const g = +e.target.closest("label").dataset.g;
       S.tccGears[g - 1] = e.target.checked;
       e.target.closest("label").classList.toggle("on", e.target.checked);
-      syncTccFields(); recalc();
+      syncTccFields(); recalc(); renderTable();
     });
   });
   syncTccFields();
@@ -1787,8 +1825,19 @@ function renderFocusSel() {
 /* ============================================================
    The numbers — mph over rpm, both live
    ============================================================ */
+/* A tick can turn a row on between rebuilds, so make sure it has numbers to show. */
+function ensureAuxRows() {
+  const n = tpsAxis().length;
+  if (!S.tccRow || S.tccRow.length !== n) S.tccRow = Array.from({ length: n }, () => snap(S.tccMph));
+  if (!S.gvRow  || S.gvRow.length  !== n) {
+    const lo = +$("afLo").value || 1800, hi = +$("afHi").value || 6000;
+    S.gvRow = tpsAxis().map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), topGvGear())));
+  }
+}
+
 function renderTable() {
   const rows = tpsAxis(), n = shiftCount();
+  ensureAuxRows();
 
   let h = '<thead><tr><th class="corner">Throttle Position %</th>';
   rows.forEach(t => { h += `<th>${fmtTps(t)}</th>`; });
@@ -1807,6 +1856,8 @@ function renderTable() {
     }).join("") + "</tr>";
 
   for (let j = 0; j < n; j++) h += rowHtml("up", j);
+  if (tccActive()) h += rowHtml("tcc", 0);
+  if (gvActive())  h += rowHtml("gv", 0);
   h += `<tr class="gap"><th></th>${"<td></td>".repeat(rows.length)}</tr>`;
   for (let j = 0; j < n; j++) h += rowHtml("down", j);
   h += "</tbody>";
@@ -1829,7 +1880,11 @@ function renderTable() {
   renderDetail();
 }
 
-const gridOf   = k => k === "up" ? S.up : S.down;
+const gridOf   = k => k === "up"  ? S.up
+                   : k === "down" ? S.down
+                   : k === "tcc"  ? [S.tccRow]
+                   : k === "gv"   ? [S.gvRow]
+                   : S.up;
 const cellRefs = el => ({ k: el.dataset.k, j: +el.dataset.j, i: +el.dataset.i, u: el.dataset.u });
 
 /* Typing in either line rewrites the stored mph; the sibling follows. */
@@ -1843,6 +1898,10 @@ function onCellInput(e) {
   const { k, j, i, u } = cellRefs(e.target);
   const v = parseFloat(e.target.value.replace(/,/g, ""));
   if (isFinite(v) && v >= 0) setCell(k, j, i, u, v);
+
+  /* ⚠️ The lightest-throttle column IS the cruise lockup speed the rest of the tool works
+     from, so editing it moves the "Locks at mph" field with it - one source of truth. */
+  if (k === "tcc" && i === 0) { S.tccMph = S.tccRow[0]; $("tccMph").value = String(Math.round(S.tccMph)); }
 
   // committed, so put the tidy value back even if what was typed was junk
   const mph = gridOf(k)[j][i];
@@ -2040,19 +2099,36 @@ function renderDetail() {
   }
   const mph  = gridOf(k)[j][i];
   const g    = gearsFor(k, j);
-  const outR = mphToRpm(mph, g.from);
-  const inR  = mphToRpm(mph, g.to);
+
+  /* ⭐ For the aux rows the two rpm figures are the two sides of the event itself - clutch
+     out vs in, direct vs over - which is exactly the number the row exists to show. */
+  let outR, inR, head, outLbl, inLbl;
+  if (k === "tcc") {
+    const t = turbineRpm(mph, ratioOf(g.from));
+    outR = t * openFactor(); inR = t;
+    head = `TCC locks in ${ordOf(g.from)}`;
+    outLbl = "RPM converter open"; inLbl = "RPM locked";
+  } else if (k === "gv") {
+    outR = mphToRpm(mph, g.from);
+    inR  = mphToRpmRatio(mph, g.from, gvRatioOf(g.from));
+    head = `Gear Vendors in ${ordOf(g.from)}`;
+    outLbl = "RPM direct"; inLbl = "RPM overdriven";
+  } else {
+    outR = mphToRpm(mph, g.from); inR = mphToRpm(mph, g.to);
+    head = `${g.from} → ${g.to}`;
+    outLbl = `RPM leaving ${g.from}`; inLbl = `RPM landing in ${g.to}`;
+  }
   const drop = outR - inR;
 
   $("detail").innerHTML = `
-    <div class="dcell"><div class="k">Shift</div><div class="v">${g.from} → ${g.to}</div></div>
+    <div class="dcell"><div class="k">${k === "up" || k === "down" ? "Shift" : "Event"}</div><div class="v">${head}</div></div>
     <div class="dcell"><div class="k">Throttle</div><div class="v">${fmtTps(tpsAxis()[i])}%</div></div>
     <div class="dcell hi"><div class="k">Road speed</div><div class="v">${fmtMph(mph)} mph</div></div>
-    <div class="dcell hi"><div class="k">RPM leaving ${g.from}</div><div class="v">${fmtRpm(outR)}</div></div>
-    <div class="dcell hi"><div class="k">RPM landing in ${g.to}</div><div class="v">${fmtRpm(inR)}</div></div>
+    <div class="dcell hi"><div class="k">${outLbl}</div><div class="v">${fmtRpm(outR)}</div></div>
+    <div class="dcell hi"><div class="k">${inLbl}</div><div class="v">${fmtRpm(inR)}</div></div>
     <div class="dcell"><div class="k">RPM ${drop >= 0 ? "drop" : "rise"}</div><div class="v">${fmtRpm(Math.abs(drop))}</div></div>
     <div class="dcell"><div class="k">Vs. redline</div><div class="v">${outR > S.redline ? "+" : "−"}${fmtRpm(Math.abs(outR - S.redline))}</div></div>`
-    + stallCells(mph, g);
+    + (k === "up" || k === "down" ? stallCells(mph, g) : "");
 }
 
 /* The one converter figure that does not need a K-factor or a torque curve:
@@ -2671,11 +2747,19 @@ function init() {
   paintTire(true);
   bindNum("fdr", "fdr");
   bindNum("slip", "slip");
-  bindNum("tccMph", "tccMph");
+  onCommit($("tccMph"), e => {
+    const v = parseFloat(e.target.value);
+    if (isFinite(v) && v > 0) {
+      S.tccMph = v;
+      if (S.tccRow) S.tccRow = S.tccRow.map(() => snap(v));   // the field sets the whole row
+    }
+    e.target.value = String(Math.round(S.tccMph));
+    recalc(); renderTable();
+  });
   $("gvOn").addEventListener("change", e => {
     S.gvOn = e.target.checked;
     $("gvBody").style.display = S.gvOn ? "" : "none";
-    renderGv();
+    renderGv(); renderTable();
   });
   bindNum("redline", "redline");
   onCommit($("stall"), e => {
