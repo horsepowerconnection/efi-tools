@@ -556,7 +556,7 @@ h1, h2, h3, h4, h5, h6,
   border-top:1px solid rgba(14,16,19,.16);padding-bottom:5px;letter-spacing:-.02em;
 }.shiftcalc .duo input:hover{background:rgba(255,255,255,.22)}.shiftcalc .duo input:focus{outline:2px solid var(--on-heat);outline-offset:-2px;background:rgba(255,255,255,.3)}.shiftcalc tbody td.bad{box-shadow:inset 0 0 0 2px var(--red-lit)}.shiftcalc tbody td.understall{box-shadow:inset 0 0 0 2px var(--amber)}/* The aux rows are events, not gear changes - name them in a different colour so the eye
    does not read them as another shift. */
-.shiftcalc tbody tr.tcc>th,.shiftcalc tbody tr.gv>th{color:var(--amber)}.shiftcalc tbody tr.tcc>th::before{content:"";}.shiftcalc tbody tr.gv>th{color:var(--blue)}.shiftcalc #wotTbl td{min-width:0}.shiftcalc #wotTbl .we input{
+.shiftcalc tbody td.dscrit{box-shadow:inset 0 0 0 2px var(--red-lit)}.shiftcalc tbody td.dscrit.understall{box-shadow:inset 0 0 0 2px var(--red-lit)}.shiftcalc tbody tr.tcc>th,.shiftcalc tbody tr.gv>th{color:var(--amber)}.shiftcalc tbody tr.tcc>th::before{content:"";}.shiftcalc tbody tr.gv>th{color:var(--blue)}.shiftcalc #wotTbl td{min-width:0}.shiftcalc #wotTbl .we input{
   width:100%;background:#0B0D10;border:1px solid var(--rule);border-radius:2px;
   color:var(--ink);font-family:var(--font-mono);font-size:14px;font-weight:700;
   text-align:center;padding:7px 6px;font-variant-numeric:tabular-nums;
@@ -831,17 +831,10 @@ h1, h2, h3, h4, h5, h6,
           <div class="fullrow__mid">
             <div class="tccpick" id="tccPick"></div>
           </div>
-          <div class="fullrow__pair" id="tccMphField">
-            <div class="fullrow__num">
-              <span class="mini">Lock rpm cruise</span>
-              <input type="number" id="tccLo" value="1400" step="50" min="600" max="5000"
-                     aria-label="Engine rpm the clutch applies at light throttle">
-            </div>
-            <div class="fullrow__num">
-              <span class="mini">at full throttle</span>
-              <input type="number" id="tccHi" value="2600" step="50" min="600" max="7000"
-                     aria-label="Engine rpm the clutch applies at wide open throttle">
-            </div>
+          <div class="fullrow__num" id="tccMphField">
+            <span class="mini">Locks after shift</span>
+            <input type="number" id="tccGap" value="5" step="1" min="0" max="60"
+                   aria-label="How many mph after the upshift into that gear the clutch applies">
           </div>
         </div>
       </div>
@@ -1277,7 +1270,7 @@ const COLORS = ["#E0453C","#F0A63C","#F5D64E","#7AC74F","#3FB8AF","#4A90E2","#9B
    ============================================================ */
 const S = {
   tire: 28.5, tw: 275, ta: 53.1, tr: 17, tireMode: "in",
-  fdr: 3.73, redline: 6200, slip: 0, tccGears: [], tccMph: 45, tccLo: 1400, tccHi: 2600, gvOn: false, gvGears: [],
+  fdr: 3.73, redline: 6200, slip: 0, tccGears: [], tccMph: 45, tccGap: 5, gvOn: false, gvGears: [],
   type: "auto", pick: { auto: "4L60E", manual: "TKX" }, stall: 0, wot: [],
   transKey: "4L60E", gearSet: "Stock", ratios: AUTOS["4L60E"].ratios.slice(),
   axis: 16, gy: "MPH", tsvUnit: "MPH", tsvFmt: "hpt", tsvMap: "1", tsvDrop: 800, tsvDropMode: "rpm",
@@ -1312,10 +1305,18 @@ function tccMphAtRpm(rpm, gear) {
   const d = K * ratioOf(gear) * S.fdr * openFactor();
   return d && S.tire ? rpm * S.tire / d : 0;
 }
+/* ⛔ The clutch cannot apply before you are IN the gear. Driving this off an rpm band put
+   lockup at 85 mph while the 3-4 shift was still 136 mph away at full throttle. So the apply
+   point is the upshift into the locking gear plus a margin: the speed then always sits above
+   the shift, and because it is read in the taller gear the rpm sits below it. */
 function tccCurve() {
-  const g  = topLockGear();
-  const lo = S.tccLo, hi = S.tccHi;
-  return tpsAxis().map(t => snap(tccMphAtRpm(lo + (hi - lo) * (t / 100), g)));
+  const g = topLockGear();
+  const j = g - 2;                      // row j is the gear j+1 -> j+2 upshift
+  const n = tpsAxis().length;
+  const src = (j >= 0 && S.up[j] && S.up[j].length === n) ? S.up[j] : null;
+  return Array.from({ length: n }, (_, i) =>
+    src ? snap(src[i] + S.tccGap)
+        : snap(tccMphAtRpm(1400, g)));  // locking in 1st - there is no shift to sit above
 }
 const isLocked   = (gear, mph) => tccActive() && locksIn(gear) && mph >= S.tccMph;
 const slipFactorAt = (gear, mph) => isLocked(gear, mph) ? 1 : openFactor();
@@ -1708,10 +1709,12 @@ function defaultTcc() {
 
   /* ⚠️ The apply BAND is in rpm, so it barely moves between families - what changes is which
      gear it applies in. Newer boxes lock a little lower, chasing efficiency. Starting points. */
+  /* ⚠️ Which gear it locks in is the thing that changes between families. How soon after the
+     shift it grabs is much the same everywhere - a few mph. Starting points. */
   let first;
-  if (top <= 4)      { first = top; S.tccLo = 1400; S.tccHi = 2600; }  // 4th only, 3rd a tick away
-  else if (top <= 6) { first = 3;   S.tccLo = 1300; S.tccHi = 2500; }
-  else               { first = 2;   S.tccLo = 1200; S.tccHi = 2400; }
+  if (top <= 4)      { first = top; }   // 4th only, 3rd a tick away
+  else if (top <= 6) { first = 3; }
+  else               { first = 2; }
   for (let g = first; g <= top; g++) S.tccGears[g - 1] = true;
 
   /* The reference speed is DERIVED from the curve - never set alongside it, or the strip and
@@ -1744,8 +1747,7 @@ function renderTccPick() {
 function syncTccFields() {
   const on = tccActive();
   $("tccMphField").style.display = on ? "" : "none";
-  $("tccLo").value = String(Math.round(S.tccLo));
-  $("tccHi").value = String(Math.round(S.tccHi));
+  $("tccGap").value = String(Math.round(S.tccGap));
   $("slipHint").textContent = S.type === "manual"
     ? "% \u2014 slip across the disc, raises engine rpm"
     : on ? "% \u2014 slip with the clutch open, below the lockup speed"
@@ -1977,7 +1979,12 @@ function heat(t) {
 function refreshCells() {
   const all = [...S.up.flat(), ...S.down.flat()].filter(isFinite);
   const lo = Math.min(...all), hi = Math.max(...all), span = (hi - lo) || 1;
-  const hunt = [], order = [], stalled = [];
+  const hunt = [], order = [], stalled = [], crit = [], early = [];
+
+  /* ⭐ The shaft turns with road speed and the final drive alone - no gear ratio - so ONE
+     road speed goes critical for every gear and every row in the table. */
+  const nc      = criticalRpm();
+  const critMph = nc > 0 ? criticalMph(nc) : 0;
 
   $("tbl").querySelectorAll("td[data-k]").forEach(td => {
     const { k, j, i } = cellRefs(td);
@@ -1999,9 +2006,30 @@ function refreshCells() {
       if (under) stalled.push(`${pairLabel(j)} at ${fmtTps(tpsAxis()[i])}%`);
     }
     td.classList.toggle("understall", under);
+
+    // past the speed the driveshaft starts to whip
+    const overCrit = critMph > 0 && gridOf(k)[j][i] >= critMph;
+    if (overCrit) crit.push(`${rowLabel(k, j)} at ${fmtTps(tpsAxis()[i])}%`);
+    td.classList.toggle("dscrit", overCrit);
+
+    // the converter cannot lock before the shift that puts you in the gear
+    if (k === "tcc") {
+      const src = S.up[topLockGear() - 2];
+      const tooSoon = src && gridOf(k)[j][i] <= src[i];
+      if (tooSoon) early.push(`${fmtTps(tpsAxis()[i])}%`);
+      td.classList.toggle("bad", !!tooSoon);
+    }
   });
 
   const msg = [];
+  if (crit.length) msg.push(
+    `${crit.length} cell${crit.length === 1 ? "" : "s"} sit at or past the driveshaft's critical ` +
+    `speed of ${Math.round(critMph)} mph (first: ${crit[0]}). Most shops stop at 70% of critical, ` +
+    `which is ${Math.round(critMph * 0.7)} mph — shorten the shaft, go up a tube size, or split it.`);
+  if (early.length) msg.push(
+    `The converter locks at or before the shift into ${ordOf(topLockGear())} at ` +
+    `${early[0]}${early.length > 1 ? ` and ${early.length - 1} more` : ""}. It cannot apply ` +
+    `before you are in the gear — raise those cells above the upshift.`);
   if (hunt.length) msg.push(
     `${hunt.length} downshift point${hunt.length === 1 ? " sits" : "s sit"} at or above the matching upshift ` +
     `(first: ${hunt[0]}). ` + (S.type === "auto"
@@ -2779,14 +2807,14 @@ function init() {
   paintTire(true);
   bindNum("fdr", "fdr");
   bindNum("slip", "slip");
-  ["tccLo", "tccHi"].forEach(id => onCommit($(id), e => {
+  onCommit($("tccGap"), e => {
     const v = parseFloat(e.target.value);
-    if (isFinite(v) && v > 0) S[id === "tccLo" ? "tccLo" : "tccHi"] = v;
-    e.target.value = String(Math.round(id === "tccLo" ? S.tccLo : S.tccHi));
-    S.tccRow = tccCurve();                      // the band rebuilds the whole curve
+    if (isFinite(v) && v >= 0) S.tccGap = v;
+    e.target.value = String(Math.round(S.tccGap));
+    S.tccRow = tccCurve();                      // the margin rebuilds the whole curve
     S.tccMph = S.tccRow[0];
     recalc(); renderTable();
-  }));
+  });
   $("gvOn").addEventListener("change", e => {
     S.gvOn = e.target.checked;
     $("gvBody").style.display = S.gvOn ? "" : "none";
