@@ -461,6 +461,56 @@ h1, h2, h3, h4, h5, h6,
 }
 </style>
 <style>
+  .injcalc__banner-inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .injcalc__banner-inner > .efitop__text { flex: 1 1 420px; min-width: 0; }
+  .efitop {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  .efitop__k {
+    font-size: .68rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--partmash-silver);
+  }
+  .efitop__phone {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--partmash-red-bright);
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .efitop__phone:hover { color: var(--partmash-white); }
+  .efitop__app {
+    margin-top: .4rem;
+    background: var(--partmash-red);
+    color: var(--partmash-white);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: .5rem .8rem;
+    border-radius: var(--style-border-radius-inputs);
+    text-decoration: none;
+  }
+  .efitop__app:hover { background: var(--partmash-red-bright); }
+  @media (max-width: 749px) {
+    .efitop { align-items: flex-start; flex: 1 1 100%; }
+    .efitop__phone { font-size: 1.5rem; padding: .2rem 0; }
+    .efitop__app { padding: .7rem .95rem; font-size: .8rem; }
+  }
+
   .injcalc__banner {
     background-color: #151515;
     border-bottom: 1px solid var(--partmash-border);
@@ -965,6 +1015,7 @@ h1, h2, h3, h4, h5, h6,
 <div class="injcalc full-width">
   <div class="injcalc__banner">
     <div class="injcalc__banner-inner">
+      <div class="efitop__text">
       <p class="injcalc__crumb">
         <a href="https://www.theefistore.com/">Home</a>
         <span>/</span>
@@ -979,6 +1030,12 @@ h1, h2, h3, h4, h5, h6,
         <a href="https://www.theefistore.com/pages/get-an-appointment">Book a session</a> or
         <a href="tel:9287066112">call 928-706-6112</a>.
       </p>
+      </div>
+      <div class="efitop">
+        <span class="efitop__k">Talk to a tuner</span>
+        <a class="efitop__phone" href="tel:9287066112">928-706-6112</a>
+        <a class="efitop__app" href="https://tools.theefistore.com">Keep this on your phone &rarr;</a>
+      </div>
     </div>
   </div>
 

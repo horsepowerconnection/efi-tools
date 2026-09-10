@@ -492,7 +492,11 @@ h1, h2, h3, h4, h5, h6,
   font-family:var(--font-display);font-size:clamp(30px,4.6vw,46px);
   font-weight:700;letter-spacing:.055em;text-transform:uppercase;
   margin:0;line-height:.98;text-wrap:balance;
-}.shiftcalc .masthead h1 em{font-style:normal;color:var(--red-lit)}.shiftcalc .masthead p{margin:0;color:var(--desc);font-size:13.5px;max-width:54ch}/* ---------- panels ---------- */
+}.shiftcalc .masthead h1 em{font-style:normal;color:var(--red-lit)}.shiftcalc .masthead__lead{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 400px}.shiftcalc .masthead__contact{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:0 0 auto}.shiftcalc .masthead__k{font-family:var(--font-display);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted)}.shiftcalc .masthead__phone{font-family:var(--font-mono);font-size:21px;font-weight:700;line-height:1.15;
+  color:var(--red-lit);text-decoration:none;font-variant-numeric:tabular-nums}.shiftcalc .masthead__phone:hover{color:var(--ink)}.shiftcalc .masthead__app{margin-top:6px;background:var(--red);color:#fff;font-family:var(--font-display);
+  font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+  padding:8px 13px;border-radius:3px;text-decoration:none}.shiftcalc .masthead__app:hover{background:var(--red-lit)}.shiftcalc .masthead p{margin:0;color:var(--desc);font-size:13.5px;max-width:54ch}/* ---------- panels ---------- */
 .shiftcalc .panel{background:var(--panel);border:1px solid var(--rule);border-radius:3px;margin-bottom:16px}.shiftcalc .panel-hd{
   display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
   padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--panel-2);
@@ -590,7 +594,7 @@ h1, h2, h3, h4, h5, h6,
 /* ---------- phones and small tablets ----------
    The grid is 16 columns wide and always will be, so it keeps its own
    horizontal scroll with the shift labels pinned; everything around it stacks. */
-@media (max-width:760px){.shiftcalc .wrap{padding:14px 11px 44px}.shiftcalc .masthead{gap:8px;padding-bottom:10px;margin-bottom:13px}.shiftcalc .masthead p{font-size:12.5px}.shiftcalc .panel{margin-bottom:12px}.shiftcalc .panel-hd{padding:8px 11px}.shiftcalc .panel-hd h2{font-size:13.5px;letter-spacing:.12em}.shiftcalc .rail-body{grid-template-columns:1fr}.shiftcalc .wide{grid-column:auto}.shiftcalc .field{padding:10px 11px 12px}.shiftcalc .tiregrid{grid-template-columns:1fr 1fr}.shiftcalc .dsgrid{grid-template-columns:1fr 1fr}/* a gear tick is a thumb target, not a mouse target */
+@media (max-width:760px){.shiftcalc .wrap{padding:14px 11px 44px}.shiftcalc .masthead{gap:8px;padding-bottom:10px;margin-bottom:13px}.shiftcalc .masthead__contact{align-items:flex-start;flex:1 1 100%}.shiftcalc .masthead__phone{font-size:24px;padding:2px 0}.shiftcalc .masthead__app{padding:11px 15px;font-size:12.5px}.shiftcalc .masthead p{font-size:12.5px}.shiftcalc .panel{margin-bottom:12px}.shiftcalc .panel-hd{padding:8px 11px}.shiftcalc .panel-hd h2{font-size:13.5px;letter-spacing:.12em}.shiftcalc .rail-body{grid-template-columns:1fr}.shiftcalc .wide{grid-column:auto}.shiftcalc .field{padding:10px 11px 12px}.shiftcalc .tiregrid{grid-template-columns:1fr 1fr}.shiftcalc .dsgrid{grid-template-columns:1fr 1fr}/* a gear tick is a thumb target, not a mouse target */
   .shiftcalc .tccpick label{padding:9px 12px;font-size:14px}.shiftcalc .duosel{grid-template-columns:1fr;gap:8px}/* 16px keeps iOS from zooming the whole page when a box takes focus.
      ⛔ `.dsgrid select` is (0,1,1) and beats a bare `select` at (0,0,1), so the driveshaft
      material box has to be named here explicitly or it stays at 13.5px and zooms. */
@@ -612,7 +616,10 @@ h1, h2, h3, h4, h5, h6,
 .shiftcalc__crumb a{color:var(--desc);text-decoration:none;}
 .shiftcalc__crumb a:hover{color:var(--red-lit);}
 .shiftcalc__crumb span{opacity:.55;margin:0 .35rem;}
-.shiftcalc .masthead{flex-direction:column;align-items:flex-start;}
+/* The crumb, title and blurb stack inside .masthead__lead now, so the masthead itself
+   goes back to a row with the contact block on its right. */
+.shiftcalc .masthead{flex-direction:row;align-items:flex-end;}
+.shiftcalc .masthead__lead{align-items:flex-start;}
 .shiftcalc .masthead p a{color:var(--red-lit);}
 
 .efinav{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
@@ -766,19 +773,25 @@ h1, h2, h3, h4, h5, h6,
 <div class="shiftcalc"><div class="wrap">
 
   <header class="masthead">
-    <p class="shiftcalc__crumb">
-      <a href="https://www.theefistore.com/">Home</a>
-      <span>/</span>
-      <a href="./index.html">Tech Center</a>
-      <span>/</span>
-      Shift Table Calculator
-    </p>
-    <h1>Shift <em>Table</em> Calculator</h1>
-    <p>Road speed over engine RPM in every cell, throttle across the top &mdash; the grid and the
-      curve in one window. Type into either number and the other follows.
-      This is a planning tool, not a tune &mdash;
-      <a href="https://www.theefistore.com/pages/get-an-appointment">book a session</a> or
-      <a href="tel:9287066112">call 928-706-6112</a> to get it dialed in.</p>
+    <div class="masthead__lead">
+      <p class="shiftcalc__crumb">
+        <a href="https://www.theefistore.com/">Home</a>
+        <span>/</span>
+        <a href="./index.html">Tech Center</a>
+        <span>/</span>
+        Shift Table Calculator
+      </p>
+      <h1>Shift <em>Table</em> Calculator</h1>
+      <p>Road speed over engine RPM in every cell, throttle across the top &mdash; the grid and the
+        curve in one window. Type into either number and the other follows.
+        This is a planning tool, not a tune &mdash;
+        <a href="https://www.theefistore.com/pages/get-an-appointment">book a session</a> to get it dialed in.</p>
+    </div>
+    <div class="masthead__contact">
+      <span class="masthead__k">Talk to a tuner</span>
+      <a class="masthead__phone" href="tel:9287066112">928-706-6112</a>
+      <a class="masthead__app" href="https://tools.theefistore.com">Keep this on your phone &rarr;</a>
+    </div>
   </header>
 
   <!-- ============ SETUP ============ -->
