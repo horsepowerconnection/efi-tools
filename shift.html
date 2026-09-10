@@ -1271,13 +1271,13 @@ const COLORS = ["#E0453C","#F0A63C","#F5D64E","#7AC74F","#3FB8AF","#4A90E2","#9B
    ============================================================ */
 const S = {
   tire: 28.5, tw: 275, ta: 53.1, tr: 17, tireMode: "in",
-  fdr: 3.73, redline: 6200, slip: 0, tccGears: [], tccMph: 45, tccGap: 5, gvOn: false, gvGears: [],
+  fdr: 3.73, redline: 6200, slip: 0, tccGears: [], tccMph: 45, tccGap: 5, gvOn: false, gvGears: [], gvGap: 5,
   type: "auto", pick: { auto: "4L60E", manual: "TKX" }, stall: 0, wot: [],
   transKey: "4L60E", gearSet: "Stock", ratios: AUTOS["4L60E"].ratios.slice(),
   axis: 16, gy: "MPH", tsvUnit: "MPH", tsvFmt: "hpt", tsvMap: "1", tsvDrop: 800, tsvDropMode: "rpm",
   show: "both", focus: -1, snap: true,
   dsLen: 52, dsOD: 3.5, dsWall: 0.083, dsMat: "steel",
-  up: [], down: [], tccRow: [], gvRow: []
+  up: [], down: [], tccRow: [], gvRow: [], tccRowGear: 0, gvRowGear: 0
 };
 
 const $ = id => document.getElementById(id);
@@ -1310,15 +1310,43 @@ function tccMphAtRpm(rpm, gear) {
    lockup at 85 mph while the 3-4 shift was still 136 mph away at full throttle. So the apply
    point is the upshift into the locking gear plus a margin: the speed then always sits above
    the shift, and because it is read in the taller gear the rpm sits below it. */
-function tccCurve() {
-  const g = topLockGear();
-  const j = g - 2;                      // row j is the gear j+1 -> j+2 upshift
+/* The engine speed the shift into that gear happens at, per throttle column. That is the
+   number the aux rows hold constant. */
+function refRpmAt(gear) {
+  const j = gear - 2;
   const n = tpsAxis().length;
-  const src = (j >= 0 && S.up[j] && S.up[j].length === n) ? S.up[j] : null;
-  return Array.from({ length: n }, (_, i) =>
-    src ? snap(src[i] + S.tccGap)
-        : snap(tccMphAtRpm(1400, g)));  // locking in 1st - there is no shift to sit above
+  if (j >= 0 && S.up[j] && S.up[j].length === n) {
+    return S.up[j].map(mph => mphToRpm(mph, j + 1));
+  }
+  const lo = +$("afLo").value || 1800, hi = +$("afHi").value || S.redline;
+  return tpsAxis().map(t => lo + (hi - lo) * (t / 100));   // nothing shifts into 1st
 }
+
+/* ⭐ Same rpm, taller gearing, so the road speed rises. Locked means zero slip by definition;
+   the overdrive multiplies the gear ratio. */
+function auxMph(kind, gear, rpm) {
+  const r = kind === "gv" ? gvRatioOf(gear) : ratioOf(gear);
+  const d = K * r * S.fdr;
+  return (d && S.tire) ? rpm * S.tire / d : 0;
+}
+function auxRpm(kind, gear, mph) {
+  const r = kind === "gv" ? gvRatioOf(gear) : ratioOf(gear);
+  return S.tire ? mph * K * r * S.fdr / S.tire : 0;
+}
+
+const tccCurve = () => { const g = topLockGear(); return refRpmAt(g).map(r => snap(auxMph("tcc", g, r))); };
+const gvCurve  = () => { const g = topGvGear();   return refRpmAt(g).map(r => snap(auxMph("gv",  g, r))); };
+
+/* ⚠️ The speed the clutch actually APPLIES at is a separate thing from the comparison row -
+   it is what the rest of the tool's rpm maths keys off. It stays tied to the shift plus the
+   margin, because the clutch cannot come in before you are in the gear. */
+function tccApplyMph() {
+  const g = topLockGear(), j = g - 2, n = tpsAxis().length;
+  return (j >= 0 && S.up[j] && S.up[j].length === n)
+    ? S.up[j][0] + S.tccGap
+    : tccMphAtRpm(1400, g);
+}
+
 const isLocked   = (gear, mph) => tccActive() && locksIn(gear) && mph >= S.tccMph;
 const slipFactorAt = (gear, mph) => isLocked(gear, mph) ? 1 : openFactor();
 
@@ -1438,11 +1466,11 @@ function buildTables() {
     rows.map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), j + 1)))
   );
   S.down = S.up.map(r => r.map(v => snap(Math.max(floor, v - hyst))));
-  /* Both aux rows are curves: the clutch applies later as throttle comes up, and you hit
-     the Gear Vendors at a different speed cruising than at full throttle. */
-  S.tccRow = tccCurve();
-  S.tccMph = S.tccRow[0];
-  S.gvRow  = rows.map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), topGvGear())));
+  /* Both aux rows hold the RPM of the shift into their gear and show what it is worth
+     in road speed once the clutch is in, and once the overdrive is engaged. */
+  S.tccRow = tccCurve();  S.tccRowGear = topLockGear();
+  S.gvRow  = gvCurve();   S.gvRowGear  = topGvGear();
+  S.tccMph = tccApplyMph();
   buildWot();
 }
 
@@ -1742,10 +1770,8 @@ function defaultTcc() {
   else               { first = 2; }
   for (let g = first; g <= top; g++) S.tccGears[g - 1] = true;
 
-  /* The reference speed is DERIVED from the curve - never set alongside it, or the strip and
-     the row disagree the way they just did. */
-  S.tccRow = tccCurve();
-  S.tccMph = S.tccRow[0];
+  S.tccRow = tccCurve();  S.tccRowGear = topLockGear();
+  S.tccMph = tccApplyMph();
 }
 
 function renderTccPick() {
@@ -1885,12 +1911,16 @@ function renderFocusSel() {
    The numbers — mph over rpm, both live
    ============================================================ */
 /* A tick can turn a row on between rebuilds, so make sure it has numbers to show. */
+/* ⛔ A row that keeps one gear's road speeds while its rpm is read in another gear is
+   nonsense - it showed 202 mph at 8,886 rpm against a 6,200 redline. So each row remembers
+   the gear it was built for and re-seeds the moment that changes. */
 function ensureAuxRows() {
   const n = tpsAxis().length;
-  if (!S.tccRow || S.tccRow.length !== n) { S.tccRow = tccCurve(); S.tccMph = S.tccRow[0]; }
-  if (!S.gvRow  || S.gvRow.length  !== n) {
-    const lo = +$("afLo").value || 1800, hi = +$("afHi").value || S.redline;
-    S.gvRow = tpsAxis().map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), topGvGear())));
+  if (!S.tccRow || S.tccRow.length !== n || S.tccRowGear !== topLockGear()) {
+    S.tccRow = tccCurve(); S.tccRowGear = topLockGear(); S.tccMph = tccApplyMph();
+  }
+  if (!S.gvRow || S.gvRow.length !== n || S.gvRowGear !== topGvGear()) {
+    S.gvRow = gvCurve(); S.gvRowGear = topGvGear();
   }
 }
 
@@ -1939,6 +1969,7 @@ function renderTable() {
   renderDetail();
 }
 
+const isAux = k => k === "tcc" || k === "gv";
 const gridOf   = k => k === "up"  ? S.up
                    : k === "down" ? S.down
                    : k === "tcc"  ? [S.tccRow]
@@ -1950,7 +1981,8 @@ const cellRefs = el => ({ k: el.dataset.k, j: +el.dataset.j, i: +el.dataset.i, u
 function setCell(k, j, i, u, value) {
   gridOf(k)[j][i] = u === "mph"
     ? snap(value)
-    : snap(rpmToMph(value, gearsFor(k, j).from));
+    : snap(isAux(k) ? auxMph(k, gearsFor(k, j).from, value)
+                    : rpmToMph(value, gearsFor(k, j).from));
 }
 
 function onCellInput(e) {
@@ -1958,14 +1990,11 @@ function onCellInput(e) {
   const v = parseFloat(e.target.value.replace(/,/g, ""));
   if (isFinite(v) && v >= 0) setCell(k, j, i, u, v);
 
-  /* ⚠️ The lightest-throttle column IS the cruise lockup speed the rest of the tool works
-     from, so editing it moves the "Locks at mph" field with it - one source of truth. */
-  if (k === "tcc") { S.tccMph = S.tccRow[0]; }   // the cruise column is the reference speed
 
   // committed, so put the tidy value back even if what was typed was junk
   const mph = gridOf(k)[j][i];
   e.target.value = u === "mph" ? fmtMph(mph)
-                               : fmtRpm(mphToRpm(mph, gearsFor(k, j).from));
+                               : fmtRpm(cellRpm(k, gearsFor(k, j).from, mph));
   writeInputs(); refreshCells(); showDetail(e.target);
 }
 
@@ -1976,13 +2005,17 @@ function onCellKey(e) {
   const from = gearsFor(k, j).from;
   const dir  = e.key === "ArrowUp" ? 1 : -1;
   const step = (e.shiftKey ? 5 : 1) * (u === "mph" ? 1 : 25);
-  const cur  = u === "mph" ? gridOf(k)[j][i] : mphToRpm(gridOf(k)[j][i], from);
+  const cur  = u === "mph" ? gridOf(k)[j][i] : cellRpm(k, from, gridOf(k)[j][i]);
   setCell(k, j, i, u, Math.max(0, cur + dir * step));
   e.target.value = u === "mph"
     ? fmtMph(gridOf(k)[j][i])
-    : fmtRpm(mphToRpm(gridOf(k)[j][i], from));
+    : fmtRpm(cellRpm(k, from, gridOf(k)[j][i]));
   writeInputs(); refreshCells(); showDetail(e.target);
 }
+
+/* An aux row describes a driveline STATE, not just a gear, so its rpm comes from that
+   state - clutch in for the lockup row, overdrive engaged for the Gear Vendors row. */
+const cellRpm = (k, gear, mph) => isAux(k) ? auxRpm(k, gear, mph) : mphToRpm(mph, gear);
 
 function writeInputs() {
   $("tbl").querySelectorAll(".duo input").forEach(inp => {
@@ -1991,7 +2024,7 @@ function writeInputs() {
     const mph = gridOf(k)[j][i];
     inp.value = u === "mph"
       ? fmtMph(mph)
-      : fmtRpm(mphToRpm(mph, gearsFor(k, j).from));
+      : fmtRpm(cellRpm(k, gearsFor(k, j).from, mph));
   });
 }
 
@@ -2052,7 +2085,7 @@ function refreshCells() {
     `speed of ${Math.round(critMph)} mph (first: ${crit[0]}). Most shops stop at 70% of critical, ` +
     `which is ${Math.round(critMph * 0.7)} mph — shorten the shaft, go up a tube size, or split it.`);
   if (early.length) msg.push(
-    `The converter locks at or before the shift into ${ordOf(topLockGear())} at ` +
+    `The locked speed sits at or below the shift into ${ordOf(topLockGear())} at ` +
     `${early[0]}${early.length > 1 ? ` and ${early.length - 1} more` : ""}. It cannot apply ` +
     `before you are in the gear — raise those cells above the upshift.`);
   if (hunt.length) msg.push(
@@ -2188,17 +2221,24 @@ function renderDetail() {
 
   /* ⭐ For the aux rows the two rpm figures are the two sides of the event itself - clutch
      out vs in, direct vs over - which is exactly the number the row exists to show. */
-  let outR, inR, head, outLbl, inLbl;
-  if (k === "tcc") {
-    const t = turbineRpm(mph, ratioOf(g.from));
-    outR = t * openFactor(); inR = t;
-    head = `TCC locks in ${ordOf(g.from)}`;
-    outLbl = "RPM converter open"; inLbl = "RPM locked";
-  } else if (k === "gv") {
-    outR = mphToRpm(mph, g.from);
-    inR  = mphToRpmRatio(mph, g.from, gvRatioOf(g.from));
-    head = `Gear Vendors in ${ordOf(g.from)}`;
-    outLbl = "RPM direct"; inLbl = "RPM overdriven";
+  let outR, inR, head, outLbl, inLbl, outMph = 0;
+  if (isAux(k)) {
+    /* Same engine speed, taller gearing - so the honest pair is the two road speeds.
+       ⚠️ They compare against DIFFERENT things: locking up is measured against the gear you
+       just left, the overdrive against the same gear running direct. */
+    const rpm = auxRpm(k, g.from, mph);
+    outR = rpm; inR = rpm;
+    if (k === "tcc") {
+      head = `${ordOf(g.from)} locked`;
+      outLbl = `MPH in ${ordOf(g.from - 1)}`;
+      outMph = rpmToMph(rpm, Math.max(1, g.from - 1));
+      inLbl  = `MPH locked in ${ordOf(g.from)}`;
+    } else {
+      head = `${ordOf(g.from)} + Gear Vendors`;
+      outLbl = `MPH in ${ordOf(g.from)} direct`;
+      outMph = auxMph("tcc", g.from, rpm);        // same gear, no overdrive
+      inLbl  = `MPH in ${ordOf(g.from)}-over`;
+    }
   } else {
     outR = mphToRpm(mph, g.from); inR = mphToRpm(mph, g.to);
     head = `${g.from} → ${g.to}`;
@@ -2210,9 +2250,11 @@ function renderDetail() {
     <div class="dcell"><div class="k">${k === "up" || k === "down" ? "Shift" : "Event"}</div><div class="v">${head}</div></div>
     <div class="dcell"><div class="k">Throttle</div><div class="v">${fmtTps(tpsAxis()[i])}%</div></div>
     <div class="dcell hi"><div class="k">Road speed</div><div class="v">${fmtMph(mph)} mph</div></div>
-    <div class="dcell hi"><div class="k">${outLbl}</div><div class="v">${fmtRpm(outR)}</div></div>
-    <div class="dcell hi"><div class="k">${inLbl}</div><div class="v">${fmtRpm(inR)}</div></div>
-    <div class="dcell"><div class="k">RPM ${drop >= 0 ? "drop" : "rise"}</div><div class="v">${fmtRpm(Math.abs(drop))}</div></div>
+    <div class="dcell hi"><div class="k">${outLbl}</div><div class="v">${isAux(k)
+        ? fmtMph(outMph) + " mph" : fmtRpm(outR)}</div></div>
+    <div class="dcell hi"><div class="k">${inLbl}</div><div class="v">${isAux(k)
+        ? fmtMph(mph) + " mph" : fmtRpm(inR)}</div></div>
+    <div class="dcell"><div class="k">${isAux(k) ? "Engine RPM" : (drop >= 0 ? "RPM drop" : "RPM rise")}</div><div class="v">${fmtRpm(isAux(k) ? outR : Math.abs(drop))}</div></div>
     <div class="dcell"><div class="k">Vs. redline</div><div class="v">${outR > S.redline ? "+" : "−"}${fmtRpm(Math.abs(outR - S.redline))}</div></div>`
     + (k === "up" || k === "down" ? stallCells(mph, g) : "");
 }
@@ -2862,8 +2904,7 @@ function init() {
     const v = parseFloat(e.target.value);
     if (isFinite(v) && v >= 0) S.tccGap = v;
     e.target.value = String(Math.round(S.tccGap));
-    S.tccRow = tccCurve();                      // the margin rebuilds the whole curve
-    S.tccMph = S.tccRow[0];
+    S.tccMph = tccApplyMph();                   // the margin sets the APPLY speed
     recalc(); renderTable();
   });
   $("gvOn").addEventListener("change", e => {
