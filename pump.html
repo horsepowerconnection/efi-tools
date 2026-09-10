@@ -909,6 +909,11 @@ h1, h2, h3, h4, h5, h6,
 .efinav__links a:hover{color:var(--partmash-red-bright);border-color:var(--partmash-red)}
 .efinav__call{color:var(--partmash-red-bright);font-weight:700;text-decoration:none;
   font-size:1rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+.efinav__install{background:var(--partmash-red);color:var(--partmash-white);border:0;
+  font-family:inherit;font-weight:700;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;
+  padding:.5rem .9rem;border-radius:999px;cursor:pointer;white-space:nowrap}
+.efinav__install:hover{background:var(--partmash-red-bright)}
+.efinav__install[hidden]{display:none}
 @media (max-width:600px){
   .efinav{gap:.6rem;padding:.55rem 12px}
   .efinav__home img{width:110px}
@@ -976,6 +981,19 @@ h1, h2, h3, h4, h5, h6,
     padding: .18rem 0;
   }
   .efitoolfoot__link:hover { color: var(--partmash-red-bright); }
+  .efitoolfoot__app {
+    display: inline-block;
+    background: var(--partmash-red);
+    color: var(--partmash-white);
+    font-weight: 700;
+    font-size: .9rem;
+    letter-spacing: .03em;
+    text-decoration: none;
+    padding: .6rem 1rem;
+    border-radius: var(--style-border-radius-inputs);
+    margin-bottom: .7rem;
+  }
+  .efitoolfoot__app:hover { background: var(--partmash-red-bright); }
   .efitoolfoot__how {
     border: 1px solid var(--partmash-border);
     border-radius: 3px;
@@ -1025,6 +1043,7 @@ h1, h2, h3, h4, h5, h6,
     <a href="./pump.html">Fuel Pump</a>
     <a href="./shift.html">Shift Table</a>
   </div>
+  <button class="efinav__install" id="efiInstall" type="button" hidden>Install app</button>
   <a class="efinav__call" href="tel:9287066112">928-706-6112</a>
 </nav>
 <div class="pumpcalc full-width">
@@ -1219,22 +1238,24 @@ h1, h2, h3, h4, h5, h6,
     <div class="efitoolfoot__install" id="EfiInstall">
       <p class="efitoolfoot__k">Keep this on your phone</p>
       <p class="efitoolfoot__blurb">
-        Save it to your home screen and it opens like an app &mdash; no app store, and it is
-        always the current version.
+        All three tools in one app, free, no app store. It keeps working with no signal,
+        so it is there in the shop and at the track.
       </p>
-      <details class="efitoolfoot__how">
-        <summary>iPhone &amp; iPad</summary>
-        <ol>
-          <li>Tap <b>Share</b> in Safari &mdash; the square with the arrow.</li>
-          <li>Scroll and tap <b>Add to Home Screen</b>.</li>
-          <li>Name it and tap <b>Add</b>.</li>
-        </ol>
-      </details>
+      <a class="efitoolfoot__app" href="https://tools.theefistore.com">Get the phone app &rarr;</a>
       <details class="efitoolfoot__how">
         <summary>Android</summary>
         <ol>
-          <li>Tap the <b>&#8942;</b> menu in Chrome.</li>
-          <li>Tap <b>Add to Home screen</b>.</li>
+          <li>Open the link above in <b>Chrome</b>.</li>
+          <li>Tap <b>Install app</b> when Chrome offers it, or the <b>&#8942;</b> menu &rarr;
+              <b>Add to Home screen</b>.</li>
+        </ol>
+      </details>
+      <details class="efitoolfoot__how">
+        <summary>iPhone &amp; iPad</summary>
+        <ol>
+          <li>Open the link above in <b>Safari</b>.</li>
+          <li>Tap <b>Share</b> &mdash; the square with the arrow.</li>
+          <li>Scroll and tap <b>Add to Home Screen</b>.</li>
         </ol>
       </details>
       <p class="efitoolfoot__done" id="EfiInstalled" hidden>
@@ -1271,6 +1292,30 @@ if ('serviceWorker' in navigator) {
       click time instead, which also covers anything added to the catalogs later. */
 (function () {
   var STORE = "https://www.theefistore.com";
+
+  /* ⭐ Chrome fires this when it is willing to install, which is later than people expect -
+     after some engagement, and usually not on the very first visit. Hold the event and let a
+     button spend it, so there is something to press instead of waiting for a banner.
+     ⚠️ iOS has no such API: the button simply never appears there, and the footer's
+     Add to Home Screen instructions cover it. */
+  var deferred = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferred = e;
+    var b = document.getElementById("efiInstall");
+    if (b) b.hidden = false;
+  });
+  window.addEventListener("appinstalled", function () {
+    deferred = null;
+    var b = document.getElementById("efiInstall");
+    if (b) b.hidden = true;
+  });
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest && e.target.closest("#efiInstall");
+    if (!b || !deferred) return;
+    deferred.prompt();
+    deferred.userChoice.then(function () { deferred = null; b.hidden = true; });
+  });
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest && e.target.closest("a[href]");
     if (!a) return;
