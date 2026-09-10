@@ -503,8 +503,8 @@ h1, h2, h3, h4, h5, h6,
 .shiftcalc .rail-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:1px;background:var(--rule-soft)}/* "wide" finally means something - it was styling nothing before */
 .shiftcalc .field.wide{grid-column:span 2}.shiftcalc .field.full{grid-column:1/-1}/* A full-width field runs horizontally: name and hint on the left, the wide control in the
    middle, any single number pinned to the right. */
-.shiftcalc .fullrow{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}.shiftcalc .fullrow__lead{flex:0 0 auto;width:300px;display:flex;flex-direction:column;gap:4px}.shiftcalc .fullrow__lead .hint{margin:0}.shiftcalc .fullrow__mid{flex:1 1 340px;display:flex;flex-direction:column;gap:6px;min-width:0}.shiftcalc .fullrow__num{flex:0 0 auto;width:130px;display:flex;flex-direction:column;gap:3px}
-@media (max-width:900px){.shiftcalc .field.wide,.shiftcalc .field.full{grid-column:1/-1}.shiftcalc .fullrow{gap:10px}.shiftcalc .fullrow__lead{width:auto;flex:1 1 100%}.shiftcalc .fullrow__num{width:100%}
+.shiftcalc .fullrow{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}.shiftcalc .fullrow__lead{flex:0 0 auto;width:300px;display:flex;flex-direction:column;gap:4px}.shiftcalc .fullrow__lead .hint{margin:0}.shiftcalc .fullrow__mid{flex:1 1 340px;display:flex;flex-direction:column;gap:6px;min-width:0}.shiftcalc .fullrow__num{flex:0 0 auto;width:130px;display:flex;flex-direction:column;gap:3px}.shiftcalc .fullrow__pair{flex:0 0 auto;display:flex;gap:8px}
+@media (max-width:900px){.shiftcalc .field.wide,.shiftcalc .field.full{grid-column:1/-1}.shiftcalc .fullrow{gap:10px}.shiftcalc .fullrow__lead{width:auto;flex:1 1 100%}.shiftcalc .fullrow__num{width:100%}.shiftcalc .fullrow__pair{flex:1 1 100%}
 }.shiftcalc .field{background:var(--panel);padding:10px 13px 12px;display:flex;flex-direction:column;gap:5px}.shiftcalc .field label,.shiftcalc .lbl{
   font-family:var(--font-display);font-size:11.5px;font-weight:600;
   letter-spacing:.15em;text-transform:uppercase;color:var(--desc);
@@ -831,10 +831,17 @@ h1, h2, h3, h4, h5, h6,
           <div class="fullrow__mid">
             <div class="tccpick" id="tccPick"></div>
           </div>
-          <div class="fullrow__num" id="tccMphField">
-            <span class="mini">Locks at mph</span>
-            <input type="number" id="tccMph" value="45" step="1" min="5" max="140"
-                   aria-label="Road speed the torque converter clutch applies, mph">
+          <div class="fullrow__pair" id="tccMphField">
+            <div class="fullrow__num">
+              <span class="mini">Lock rpm cruise</span>
+              <input type="number" id="tccLo" value="1400" step="50" min="600" max="5000"
+                     aria-label="Engine rpm the clutch applies at light throttle">
+            </div>
+            <div class="fullrow__num">
+              <span class="mini">at full throttle</span>
+              <input type="number" id="tccHi" value="2600" step="50" min="600" max="7000"
+                     aria-label="Engine rpm the clutch applies at wide open throttle">
+            </div>
           </div>
         </div>
       </div>
@@ -1270,7 +1277,7 @@ const COLORS = ["#E0453C","#F0A63C","#F5D64E","#7AC74F","#3FB8AF","#4A90E2","#9B
    ============================================================ */
 const S = {
   tire: 28.5, tw: 275, ta: 53.1, tr: 17, tireMode: "in",
-  fdr: 3.73, redline: 6200, slip: 0, tccGears: [], tccMph: 45, gvOn: false, gvGears: [],
+  fdr: 3.73, redline: 6200, slip: 0, tccGears: [], tccMph: 45, tccLo: 1400, tccHi: 2600, gvOn: false, gvGears: [],
   type: "auto", pick: { auto: "4L60E", manual: "TKX" }, stall: 0, wot: [],
   transKey: "4L60E", gearSet: "Stock", ratios: AUTOS["4L60E"].ratios.slice(),
   axis: 16, gy: "MPH", tsvUnit: "MPH", tsvFmt: "hpt", tsvMap: "1", tsvDrop: 800, tsvDropMode: "rpm",
@@ -1294,6 +1301,22 @@ const openFactor = () => 1 / (1 - Math.min(S.slip, 34) / 100);
    the graph, the exports - has to see the same two states or the rpm column is fiction. */
 const locksIn    = gear => !!S.tccGears[gear - 1];
 const tccActive  = () => S.type === "auto" && S.tccGears.some(Boolean);
+
+/* ⭐ The apply point across the throttle axis. A TCU locks early when you are cruising and
+   holds off under load, so this is a curve, not a threshold - built from an rpm band the
+   same way the shift autofill is.
+   ⚠️ Computed with the converter still OPEN, because that is the state the engine is in at
+   the instant before the clutch applies. It also keeps this non-circular: isLocked() reads
+   S.tccMph, which is derived FROM this row. */
+function tccMphAtRpm(rpm, gear) {
+  const d = K * ratioOf(gear) * S.fdr * openFactor();
+  return d && S.tire ? rpm * S.tire / d : 0;
+}
+function tccCurve() {
+  const g  = topLockGear();
+  const lo = S.tccLo, hi = S.tccHi;
+  return tpsAxis().map(t => snap(tccMphAtRpm(lo + (hi - lo) * (t / 100), g)));
+}
 const isLocked   = (gear, mph) => tccActive() && locksIn(gear) && mph >= S.tccMph;
 const slipFactorAt = (gear, mph) => isLocked(gear, mph) ? 1 : openFactor();
 
@@ -1413,10 +1436,10 @@ function buildTables() {
     rows.map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), j + 1)))
   );
   S.down = S.up.map(r => r.map(v => snap(Math.max(floor, v - hyst))));
-  /* The lockup point is flat by default - it is a calibration threshold, not a shift curve,
-     and a tuner who wants it to climb with throttle is better off saying so explicitly.
-     The Gear Vendors gets the same autofill curve as an upshift, because that is what it is. */
-  S.tccRow = rows.map(() => snap(S.tccMph));
+  /* Both aux rows are curves: the clutch applies later as throttle comes up, and you hit
+     the Gear Vendors at a different speed cruising than at full throttle. */
+  S.tccRow = tccCurve();
+  S.tccMph = S.tccRow[0];
   S.gvRow  = rows.map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), topGvGear())));
   buildWot();
 }
@@ -1683,11 +1706,18 @@ function defaultTcc() {
   S.tccGears = new Array(top).fill(false);
   if (!(S.type === "auto" && (S.ratios[top - 1] || 1) < 1)) return;
 
+  /* ⚠️ The apply BAND is in rpm, so it barely moves between families - what changes is which
+     gear it applies in. Newer boxes lock a little lower, chasing efficiency. Starting points. */
   let first;
-  if (top <= 4)      { first = top; S.tccMph = 45; }   // 4th only - 3rd is a tick away
-  else if (top <= 6) { first = 3;   S.tccMph = 35; }
-  else               { first = 2;   S.tccMph = 25; }
+  if (top <= 4)      { first = top; S.tccLo = 1400; S.tccHi = 2600; }  // 4th only, 3rd a tick away
+  else if (top <= 6) { first = 3;   S.tccLo = 1300; S.tccHi = 2500; }
+  else               { first = 2;   S.tccLo = 1200; S.tccHi = 2400; }
   for (let g = first; g <= top; g++) S.tccGears[g - 1] = true;
+
+  /* The reference speed is DERIVED from the curve - never set alongside it, or the strip and
+     the row disagree the way they just did. */
+  S.tccRow = tccCurve();
+  S.tccMph = S.tccRow[0];
 }
 
 function renderTccPick() {
@@ -1714,7 +1744,8 @@ function renderTccPick() {
 function syncTccFields() {
   const on = tccActive();
   $("tccMphField").style.display = on ? "" : "none";
-  $("tccMph").value = String(S.tccMph);
+  $("tccLo").value = String(Math.round(S.tccLo));
+  $("tccHi").value = String(Math.round(S.tccHi));
   $("slipHint").textContent = S.type === "manual"
     ? "% \u2014 slip across the disc, raises engine rpm"
     : on ? "% \u2014 slip with the clutch open, below the lockup speed"
@@ -1742,7 +1773,7 @@ function renderTcc() {
     <div class="cellbox">
       <span class="gn">Locks At</span>
       <span class="v" style="color:var(--amber)">${Math.round(S.tccMph)}</span>
-      <span class="u">mph${drop >= 1 ? " &middot; " + fmtRpm(drop) + " rpm drop" : " &middot; no slip entered"}</span>
+      <span class="u">mph cruising${S.tccRow && S.tccRow.length ? " &middot; " + Math.round(S.tccRow[S.tccRow.length - 1]) + " at WOT" : ""}</span>
     </div>`];
 
   /* ⭐ A row per locking gear. The engine speed at the lockup point is the number a tuner is
@@ -1784,7 +1815,8 @@ function renderTcc() {
   for (let j = 0; j < shiftCount(); j++) {
     const row = gridOf("up")[j] || [];
     for (let i = 0; i < row.length; i++) {
-      if (locksIn(gearsFor("up", j).from) && Math.abs(row[i] - S.tccMph) <= 3) {
+      const applyAt = (S.tccRow && S.tccRow[i] !== undefined) ? S.tccRow[i] : S.tccMph;
+      if (locksIn(gearsFor("up", j).from) && Math.abs(row[i] - applyAt) <= 3) {
         near.push(`${pairLabel(j)} at ${fmtTps(tpsAxis()[i])}%`);
         break;
       }
@@ -1828,7 +1860,7 @@ function renderFocusSel() {
 /* A tick can turn a row on between rebuilds, so make sure it has numbers to show. */
 function ensureAuxRows() {
   const n = tpsAxis().length;
-  if (!S.tccRow || S.tccRow.length !== n) S.tccRow = Array.from({ length: n }, () => snap(S.tccMph));
+  if (!S.tccRow || S.tccRow.length !== n) { S.tccRow = tccCurve(); S.tccMph = S.tccRow[0]; }
   if (!S.gvRow  || S.gvRow.length  !== n) {
     const lo = +$("afLo").value || 1800, hi = +$("afHi").value || 6000;
     S.gvRow = tpsAxis().map(t => snap(rpmToMph(lo + (hi - lo) * (t / 100), topGvGear())));
@@ -1901,7 +1933,7 @@ function onCellInput(e) {
 
   /* ⚠️ The lightest-throttle column IS the cruise lockup speed the rest of the tool works
      from, so editing it moves the "Locks at mph" field with it - one source of truth. */
-  if (k === "tcc" && i === 0) { S.tccMph = S.tccRow[0]; $("tccMph").value = String(Math.round(S.tccMph)); }
+  if (k === "tcc") { S.tccMph = S.tccRow[0]; }   // the cruise column is the reference speed
 
   // committed, so put the tidy value back even if what was typed was junk
   const mph = gridOf(k)[j][i];
@@ -2747,15 +2779,14 @@ function init() {
   paintTire(true);
   bindNum("fdr", "fdr");
   bindNum("slip", "slip");
-  onCommit($("tccMph"), e => {
+  ["tccLo", "tccHi"].forEach(id => onCommit($(id), e => {
     const v = parseFloat(e.target.value);
-    if (isFinite(v) && v > 0) {
-      S.tccMph = v;
-      if (S.tccRow) S.tccRow = S.tccRow.map(() => snap(v));   // the field sets the whole row
-    }
-    e.target.value = String(Math.round(S.tccMph));
+    if (isFinite(v) && v > 0) S[id === "tccLo" ? "tccLo" : "tccHi"] = v;
+    e.target.value = String(Math.round(id === "tccLo" ? S.tccLo : S.tccHi));
+    S.tccRow = tccCurve();                      // the band rebuilds the whole curve
+    S.tccMph = S.tccRow[0];
     recalc(); renderTable();
-  });
+  }));
   $("gvOn").addEventListener("change", e => {
     S.gvOn = e.target.checked;
     $("gvBody").style.display = S.gvOn ? "" : "none";
