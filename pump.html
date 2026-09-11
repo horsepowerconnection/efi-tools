@@ -461,6 +461,13 @@ h1, h2, h3, h4, h5, h6,
 }
 </style>
 <style>
+  .pumpcalc__gone {
+    font-size: .8rem;
+    color: var(--partmash-silver);
+    line-height: 1.35;
+  }
+  .pumpcalc__gone a { color: var(--partmash-red-bright); }
+
   .pumpcalc__banner-inner {
     display: flex;
     align-items: flex-end;
@@ -1578,15 +1585,22 @@ if ('serviceWorker' in navigator) {
     return '<p class="pumpcalc__prow-note pumpcalc__prow-note--ok">' + m.toFixed(0) + ' gph of headroom.</p>';
   }
 
+  // ⛔ A product that is not published has NO storefront page and cannot be sold. Offering
+  //    "Add to Cart" posts a variant the storefront will refuse; offering "View" links to a
+  //    404. Discontinued parts are deliberately kept here as drafts, so say what they are.
+  //    ⚠️ availableForSale is true on a draft - it describes stock, not publication - which is
+  //    how 61 of these came to be listed with working buy buttons.
   function buyCell(x) {
-    return '<div class="pumpcalc__prow-buy"><span class="pumpcalc__price">' + money(x.pr) + '</span>' +
-      (x.vid
+    var action = x.pub === 0
+      ? '<span class="pumpcalc__gone">Discontinued &mdash; <a href="tel:9287066112">call</a></span>'
+      : x.vid
         ? '<form action="/cart/add" method="post" enctype="multipart/form-data" class="pumpcalc__buy">' +
           '<input type="hidden" name="id" value="' + esc(x.vid) + '">' +
           '<input type="hidden" name="quantity" value="1">' +
           '<button type="submit" class="btn btn--primary pumpcalc__add">Add to Cart</button></form>'
-        : '<a href="https://www.theefistore.com/products/' + esc(x.h) + '" class="btn btn--outline pumpcalc__add">View</a>') +
-      '</div>';
+        : '<a href="https://www.theefistore.com/products/' + esc(x.h) + '" class="btn btn--outline pumpcalc__add">View</a>';
+    return '<div class="pumpcalc__prow-buy"><span class="pumpcalc__price">' +
+      (x.pub === 0 ? '' : money(x.pr)) + '</span>' + action + '</div>';
   }
 
   function pumpRow(p, needGph, pr) {
