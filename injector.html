@@ -1483,9 +1483,12 @@ if ('serviceWorker' in navigator) {
       if (isFinite(stated) && stated > 0) return stated;   // the vendor said so
     }
 
-    // Fallback for products no dealer file covers - their titles do state the count.
+    // Fallback for the products nothing covers - their titles usually state the count.
     var t = String(p && typeof p === 'object' ? p.title : p);
-    var m = /(\d{1,2})\s*[-\s]?pack\b/i.exec(t)
+    // ⛔ "(Qty 8)" is a real pattern this used to miss: "Edelbrock Fuel Injector #15807
+    //    41 Lb/Hr Dual Spray (Qty 8)" read as a SINGLE, so ordering eight gave you 64.
+    var m = /\(\s*qty\.?\s*(\d{1,2})\s*\)/i.exec(t)
+         || /(\d{1,2})\s*[-\s]?pack\b/i.exec(t)
          || /\bset of\s*(\d{1,2})\b/i.exec(t)
          || /\b(\d{1,2})\s*injectors?\b/i.exec(t);
     if (m) return parseInt(m[1], 10);
