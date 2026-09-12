@@ -1580,6 +1580,15 @@ if ('serviceWorker' in navigator) {
         lengths and o-ring sizes, and those do not interchange in a manifold, so a set
         of 8 for one application plus singles from another is not a usable set of 10. */
   function familyKey(p) {
+    /* ⭐ Injector Dynamics encode the exact hardware in the part number:
+       ID<flow>.<length>.<top>.<bottom>[.<count>]. Two products sharing the first four
+       segments ARE the same injector - one loose, one boxed - and 24 of our configurations
+       are stocked both ways, so this is where most ID mixes come from.
+       ⛔ Do NOT key ID off injectorSpecs: its regex needs a fifth segment (so every single
+          falls through it) and it drops the letter on a bottom adaptor, which would read a
+          14B as a 14 and offer a mix of two different parts. */
+    var m = /^(ID\d{3,4})\.([^.]+)\.([^.]+)\.([^.]+?)(?:\.(\d{1,2}))?$/i.exec(String(p.sku || ''));
+    if (m) return ('ID|' + m[1] + '.' + m[2] + '.' + m[3] + '.' + m[4]).toUpperCase();
     return [p.vendor, p.flowLbHr, injectorSpecs(p).join('|')].join(' :: ');
   }
   function buyable(p) { return !!(p.available && p.variantId && p.price != null); }
