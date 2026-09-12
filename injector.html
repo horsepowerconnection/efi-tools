@@ -813,6 +813,19 @@ h1, h2, h3, h4, h5, h6,
     border-top: 1px solid rgba(255,255,255,0.08);
   }
   .injcalc__pack:first-child { border-top: 0; }
+  /* the box that matches the cylinder count */
+  .injcalc__pack.is-match {
+    background: rgba(255,26,26,0.07);
+    padding-left: 0.5rem; padding-right: 0.5rem;
+    margin-left: -0.5rem; margin-right: -0.5rem;
+  }
+  .injcalc__pack-fit {
+    flex: 0 0 auto;
+    font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: #ff5a5a; white-space: nowrap;
+  }
+  .injcalc__pack-intro { margin: 0 0 0.7rem; font-size: 0.82rem; opacity: 0.78; }
   /* ⛔ min-width:0 is required — without it a flex item refuses to shrink and
      text-overflow never kicks in, so a long product name pushes the button
      off the row instead of ellipsising. */
@@ -1799,8 +1812,23 @@ if ('serviceWorker' in navigator) {
   }
 
   // ---------- Product matching ----------
-  function renderProducts(minFlow, needed) {
+  /* ⭐ The box we lead with is tied to the CYLINDER COUNT, not to `needed` — a staged
+     setup needs 16 injectors but still buys them 8 to a box.
+     ⛔ Do NOT hard-cap the target at 8. The catalog really does carry sets of 10
+        (Viper SRT-10) and 16-packs, and capping buried the exactly-right box under a
+        pair of 8s. Ask the flow group what it stocks, then fall back to 8s. */
+  function packTarget(cyl, packs) {
+    var c = Math.max(1, parseInt(cyl, 10) || 8);
+    var have = {};
+    packs.forEach(function (p) { have[packQty(p)] = true; });
+    if (have[c]) return c;                  // a box that matches the engine exactly
+    if (c > 8 && have[8]) return 8;         // otherwise buy 8s in multiples
+    return c;                               // nothing matches — nothing gets flagged
+  }
+
+  function renderProducts(minFlow, needed, cyl) {
     needed = Math.max(1, parseInt(needed, 10) || 8);
+    cyl = Math.max(1, parseInt(cyl, 10) || 8);
     // ⚠️ flowLbHr arrives from the metafield as a STRING - compare and sort numerically
     var matches = CATALOG.filter(function (p) { return parseFloat(p.flowLbHr) >= minFlow; })
       .sort(function (a, b) { return parseFloat(a.flowLbHr) - parseFloat(b.flowLbHr); });
@@ -1856,10 +1884,33 @@ if ('serviceWorker' in navigator) {
     var sizes = Object.keys(groups).map(parseFloat).sort(function (a, b) { return a - b; });
     var recommended = sizes[0];
 
+    /* Order inside a size group: the set that matches the cylinder count first, then
+       singles, then every other box size ascending. Nothing is hidden — a set of 6 is
+       still buyable, it just stops being the first thing a V8 customer reads. */
+    function packRank(p, target) {
+      var per = packQty(p);
+      if (per === target && target > 1) return 0;   // the set that matches the engine
+      if (per === 1) return 1;                      // singles stay right underneath it
+      return 2;                                     // every other box size, ascending
+    }
+
     var html = '';
+    html += '<p class="injcalc__pack-intro">Sized for your ' + cyl + '-cylinder build — ' +
+            (cyl > 8
+              ? 'a matching set of ' + cyl + ' first where we stock one, otherwise sets of 8 bought in multiples. '
+              : 'sets of ' + cyl + ' first. ') +
+            'Singles are listed as well.</p>';
+
     sizes.slice(0, 3).forEach(function (f) {
       var isRec = f === recommended;
-      var packs = groups[f].slice().sort(function (a, b) { return packQty(a) - packQty(b); });
+      var target = packTarget(cyl, groups[f]);      // per flow group — stock differs by size
+      var fitBadge = target === cyl ? 'Fits all ' + cyl : 'Buy in ' + target + 's';
+      var fitNote = target === cyl
+        ? 'One box covers all ' + cyl + ' cylinders.'
+        : cyl + ' cylinders buy in multiples of ' + target + ' — we have no set of ' + cyl + ' this size.';
+      var packs = groups[f].slice().sort(function (a, b) {
+        return (packRank(a, target) - packRank(b, target)) || (packQty(a) - packQty(b));
+      });
 
       html += '<div class="injcalc__size-group' + (isRec ? ' is-recommended' : '') + '">';
       html += '<p class="injcalc__size-head">' +
@@ -1872,6 +1923,7 @@ if ('serviceWorker' in navigator) {
         var per = packQty(p);                             // injectors per box
         var boxes = Math.max(1, Math.ceil(needed / per)); // boxes to cover the build
         var gets = boxes * per;
+        var isFit = per === target && target > 1;
 
         // Label by what actually differs between same-flow injectors. Fall back to
         // the trimmed title when a product states no connector or dimensions.
@@ -1882,11 +1934,12 @@ if ('serviceWorker' in navigator) {
           .replace(/\s*[-–—]?\s*(set of\s*(\d{1,2}|[a-z]+)|(\d{1,2}|[a-z]+)\s*[-\s]?pack|individual|single)\s*(injectors?)?\s*$/i, '')
           .replace(/\s{2,}/g, ' ').trim() || 'Injector';
 
-        html += '<li class="injcalc__pack">' +
+        html += '<li class="injcalc__pack' + (isFit ? ' is-match' : '') + '">' +
                 '<a class="injcalc__pack-name" href="' + p.url + '" title="' + esc(p.title) + '">' +
                   '<span class="injcalc__pack-brand">' + esc(p.vendor) + '</span> ' + esc(label) +
                 '</a>' +
                 '<span class="injcalc__pack-qty">' + (per > 1 ? 'Set of ' + per : 'Single') + '</span>' +
+                (isFit ? '<span class="injcalc__pack-fit" title="' + esc(fitNote) + '">' + esc(fitBadge) + '</span>' : '') +
                 '<span class="injcalc__pack-price">' + (p.price != null ? money(p.price) : '') + '</span>' +
                 (p.available && p.variantId
                   ? '<form action="/cart/add" method="post" enctype="multipart/form-data" class="injcalc__buy">' +
@@ -1951,7 +2004,7 @@ if ('serviceWorker' in navigator) {
 
     renderChart(rpms, series);
     renderTable(rpms, series);
-    renderProducts(minFlow, params.numInjectors);
+    renderProducts(minFlow, params.numInjectors, params.cyl);
   }
 
   // ---------- Init ----------
