@@ -806,6 +806,24 @@ h1, h2, h3, h4, h5, h6,
     padding: 2px 7px; border-radius: 2px; margin-right: 0.4rem;
     vertical-align: 2px;
   }
+  /* the "buy 8 + 2 singles" line */
+  .injcalc__mix {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.7rem;
+    margin: 0 0 0.7rem; padding: 0.5rem 0.65rem;
+    border: 1px dashed rgba(255,26,26,0.55);
+    border-radius: 3px;
+    background: rgba(255,26,26,0.05);
+    font-size: 0.84rem;
+  }
+  .injcalc__mix-flag {
+    flex: 0 0 auto;
+    border: 1px solid #ff1a1a; color: #ff5a5a;
+    font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 2px; white-space: nowrap;
+  }
+  .injcalc__mix-desc { flex: 1 1 12rem; min-width: 0; }
+  .injcalc__mix-form { margin: 0; flex: 0 0 auto; }
   .injcalc__pack-list { list-style: none; margin: 0; padding: 0; }
   .injcalc__pack {
     display: flex; align-items: center; gap: 0.75rem;
@@ -1182,15 +1200,15 @@ h1, h2, h3, h4, h5, h6,
           <div class="injcalc__row-trio" id="InjSetFieldsRow">
             <div class="injcalc__row" id="InjSet1Wrap">
               <label for="InjSet1">Injectors in Set 1</label>
-              <input type="number" id="InjSet1" value="8" min="1" max="8" step="1">
+              <input type="number" id="InjSet1" value="8" min="1" max="16" step="1">
             </div>
             <div class="injcalc__row" id="InjSet2Wrap" hidden>
               <label for="InjSet2">Injectors in Set 2</label>
-              <input type="number" id="InjSet2" value="8" min="1" max="8" step="1">
+              <input type="number" id="InjSet2" value="8" min="1" max="16" step="1">
             </div>
             <div class="injcalc__row" id="InjSet3Wrap" hidden>
               <label for="InjSet3">Injectors in Set 3</label>
-              <input type="number" id="InjSet3" value="8" min="1" max="8" step="1">
+              <input type="number" id="InjSet3" value="8" min="1" max="16" step="1">
             </div>
           </div>
           <p class="injcalc__hint">Total injectors = sum of all sets. All sets are treated as firing together and sharing the load evenly — this does not model a staged-injection kick-in point.</p>
@@ -1555,6 +1573,92 @@ if ('serviceWorker' in navigator) {
     return bits;
   }
 
+  /* ⭐ MIXING BOXES TO HIT THE COUNT EXACTLY.
+     A 10-cylinder build does not have to buy two boxes of 8 and eat six spares — a
+     set of 8 plus 2 singles is exactly 10, and a 12 is a set of 8 plus a set of 4.
+     ⛔ ONLY MIX WITHIN ONE FAMILY. The same flow ships with different connectors,
+        lengths and o-ring sizes, and those do not interchange in a manifold, so a set
+        of 8 for one application plus singles from another is not a usable set of 10. */
+  function familyKey(p) {
+    return [p.vendor, p.flowLbHr, injectorSpecs(p).join('|')].join(' :: ');
+  }
+  function buyable(p) { return !!(p.available && p.variantId && p.price != null); }
+
+  // cheapest purchasable product per box size inside one family
+  function familyItems(list) {
+    var by = {};
+    list.forEach(function (p) {
+      if (!buyable(p)) return;
+      var q = packQty(p);
+      if (!by[q] || p.price < by[q].price) by[q] = p;
+    });
+    return Object.keys(by).map(function (k) { return { per: parseInt(k, 10), p: by[k] }; });
+  }
+
+  /* Cheapest way to cover `needed` injectors out of one family's box sizes.
+     Landing exactly on the number beats any cheaper plan that overshoots. */
+  function coverPlan(items, needed) {
+    var cap = needed + 16, best = new Array(cap + 1), q, i, k;
+    best[0] = { price: 0, counts: {} };
+    for (q = 1; q <= cap; q++) {
+      for (i = 0; i < items.length; i++) {
+        var per = items[i].per;
+        if (per > q) continue;
+        var prev = best[q - per];
+        if (!prev) continue;
+        var cand = prev.price + items[i].p.price;
+        if (!best[q] || cand < best[q].price) {
+          var counts = {};
+          for (k in prev.counts) counts[k] = prev.counts[k];
+          counts[per] = (counts[per] || 0) + 1;
+          best[q] = { price: cand, counts: counts };
+        }
+      }
+    }
+    var pick = best[needed] ? needed : -1;
+    if (pick < 0) for (q = needed + 1; q <= cap; q++) if (best[q]) { pick = q; break; }
+    if (pick < 0) return null;
+    return { total: pick, price: best[pick].price, counts: best[pick].counts };
+  }
+
+  /* The best MIX for one flow size: an exact-count plan built from more than one box
+     size within a single family. Returned only when it beats buying one box size —
+     either nothing single-sized lands on the number, or the mix costs less. */
+  function bestMix(list, needed) {
+    var fams = {};
+    list.forEach(function (p) {
+      var k = familyKey(p);
+      (fams[k] = fams[k] || []).push(p);
+    });
+    var mixed = null;
+    Object.keys(fams).forEach(function (k) {
+      var items = familyItems(fams[k]);
+      if (items.length < 2) return;
+      var plan = coverPlan(items, needed);
+      if (!plan || plan.total !== needed) return;
+      var sizes = Object.keys(plan.counts).map(Number).sort(function (a, b) { return b - a; });
+      if (sizes.length < 2) return;                 // one box size already does it
+
+      /* ⛔ Compare against buying ONE box size OF THE SAME INJECTOR, not against the
+         cheapest thing in the whole flow group. Some other product being buyable in tens
+         says nothing about the injector this customer is actually looking at. */
+      var soloPrice = null;
+      items.forEach(function (it) {
+        var boxes = Math.ceil(needed / it.per);
+        if (boxes * it.per !== needed) return;      // that size cannot land on the number
+        var pr = boxes * it.p.price;
+        if (soloPrice === null || pr < soloPrice) soloPrice = pr;
+      });
+      if (soloPrice !== null && soloPrice <= plan.price) return;
+
+      if (!mixed || plan.price < mixed.plan.price)
+        mixed = { key: k, plan: plan, sizes: sizes, items: items, sample: fams[k][0] };
+    });
+    return mixed;
+  }
+
+  function boxLabel(per) { return per > 1 ? 'Set of ' + per : 'Single'; }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1751,11 +1855,14 @@ if ('serviceWorker' in navigator) {
     recalc();
   });
 
-  // keep "Injectors in Set 1" in sync with cylinder count (capped at 8) unless user overrides it
+  /* Keep "Injectors in Set 1" in sync with the cylinder count unless the user overrides it.
+     ⛔ This used to cap at 8 while the Cylinders field accepts 16, so a V10 was sized as if
+        8 injectors fed 10 cylinders - fuel per injector came out ~25% high. One injector per
+        cylinder is the sane default; a staged build adds a second set on top. */
   var set1Touched = false;
   els.set1.addEventListener('input', function () { set1Touched = true; });
   els.cyl.addEventListener('input', function () {
-    if (!set1Touched) els.set1.value = Math.min(parseInt(els.cyl.value, 10) || 8, 8);
+    if (!set1Touched) els.set1.value = Math.min(parseInt(els.cyl.value, 10) || 8, 16);
   });
 
   // ---------- Chart + table ----------
@@ -1917,6 +2024,39 @@ if ('serviceWorker' in navigator) {
               (isRec ? '<span class="injcalc__rec-flag">Recommended</span> ' : '') +
               '<strong>' + f + ' lb/hr</strong> <span>(' + Math.round(f * 10.5) + ' cc/min) · ' +
               packs[0].vendor + '</span></p>';
+
+      /* ⭐ The mix that lands on the number exactly. Shown above the list because it
+         is the answer for a 10 or a 12, where no box size matches the engine. */
+      var mix = bestMix(groups[f], needed);
+      if (mix) {
+        var itemBy = {};
+        mix.items.forEach(function (it) { itemBy[it.per] = it.p; });
+        var famLabel = mix.sample.vendor + (injectorSpecs(mix.sample).length
+          ? ' ' + injectorSpecs(mix.sample).join(' · ') : '');
+        var desc = mix.sizes.map(function (per) {
+          var n = mix.plan.counts[per];
+          return n + ' × ' + boxLabel(per).toLowerCase() + (per === 1 && n > 1 ? 's' : '');
+        }).join(' + ');
+
+        var fields = '', n = 0, titles = [];
+        mix.sizes.forEach(function (per) {
+          var prod = itemBy[per];
+          fields += '<input type="hidden" name="items[' + n + '][id]" value="' + prod.variantId + '">' +
+                    '<input type="hidden" name="items[' + n + '][quantity]" value="' + mix.plan.counts[per] + '">';
+          titles.push(mix.plan.counts[per] + ' × ' + prod.title);
+          n++;
+        });
+
+        html += '<p class="injcalc__mix" title="' + esc(titles.join('  |  ')) + '">' +
+                '<span class="injcalc__mix-flag">Exactly ' + needed + '</span>' +
+                '<span class="injcalc__mix-desc">' + esc(desc) + ' of the ' + esc(famLabel) +
+                  ' — no spares, ' + money(mix.plan.price) + '</span>' +
+                '<form action="/cart/add" method="post" enctype="multipart/form-data" class="injcalc__mix-form">' +
+                  fields +
+                  '<button type="submit" class="btn btn--primary injcalc__add">Add all ' + needed + '</button>' +
+                '</form>' +
+                '</p>';
+      }
 
       html += '<ul class="injcalc__pack-list">';
       packs.forEach(function (p) {
