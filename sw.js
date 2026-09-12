@@ -1,5 +1,5 @@
 /* EFI Tools — bump CACHE on ANY shipped change or phones keep serving the old one. */
-const CACHE = "efi-tools-7fd4f1acfc";
+const CACHE = "efi-tools-3423042e6c";
 const SHELL = ["./", "./index.html", "./injector.html", "./pump.html", "./shift.html",
   "./manifest.webmanifest", "./assets/efi-store-logo.png", "./assets/icon-192.png",
   "./assets/injector-catalog.json", "./assets/pump-catalog.json"];
