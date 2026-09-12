@@ -469,12 +469,16 @@ h1, h2, h3, h4, h5, h6,
    ⚠️ Scoped to the three tools rather than every input on the store — this is a fix for a
    known defect, not a licence to restyle the whole site's forms. */
 @media (max-width: 768px) {
+  /* ⚠️ The :not([multiple]) is NOT decoration - it is there for specificity. The sections
+     set `.injcalc__row select{font-size:.95rem}`, which ties with a bare
+     `[class*="injcalc"] select` and wins on order, so four selects stayed at 15.2px while
+     every input moved. `input[type]` already carries the same weight for the inputs. */
   [class*="injcalc"] input[type],
-  [class*="injcalc"] select,
+  [class*="injcalc"] select:not([multiple]),
   [class*="pumpcalc"] input[type],
-  [class*="pumpcalc"] select,
+  [class*="pumpcalc"] select:not([multiple]),
   [class*="shiftcalc"] input[type],
-  [class*="shiftcalc"] select {
+  [class*="shiftcalc"] select:not([multiple]) {
     font-size: 16px;
   }
 }
