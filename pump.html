@@ -459,6 +459,25 @@ h1, h2, h3, h4, h5, h6,
 .section-padded {
   padding: 2.5rem 0;
 }
+
+/* ---------- iPhone: keep the tool forms out of Safari's auto-zoom ---------- */
+/* ⛔ iOS Safari zooms the WHOLE PAGE in when a text, number or select control smaller than
+   16px takes focus — and leaves it zoomed. Tapping "Cylinders" on an iPhone pushed the
+   results off screen and the customer had to pinch back out to read them. 20 of the 31
+   controls in the injector calculator sat at 15.2px. 16px is the threshold, not a
+   preference. Android and desktop are unaffected, and nothing above 768px changes.
+   ⚠️ Scoped to the three tools rather than every input on the store — this is a fix for a
+   known defect, not a licence to restyle the whole site's forms. */
+@media (max-width: 768px) {
+  [class*="injcalc"] input[type],
+  [class*="injcalc"] select,
+  [class*="pumpcalc"] input[type],
+  [class*="pumpcalc"] select,
+  [class*="shiftcalc"] input[type],
+  [class*="shiftcalc"] select {
+    font-size: 16px;
+  }
+}
 </style>
 <style>
   .pumpcalc__gone {
@@ -955,9 +974,16 @@ h1, h2, h3, h4, h5, h6,
     font-weight: 400;
   }
 
+/* ⛔ SAFE AREA. The head sets viewport-fit=cover with a black-translucent status bar, which
+   is what makes an installed iPhone app run full-screen - and also what slides this sticky
+   nav UP UNDER THE CLOCK on any notched iPhone. env() resolves to 0px everywhere else, so
+   this costs Android and desktop nothing. */
 .efinav{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
-  padding:.6rem var(--page-margin);background:#0d0d0d;
+  padding:calc(.6rem + env(safe-area-inset-top)) calc(var(--page-margin) + env(safe-area-inset-right))
+          .6rem calc(var(--page-margin) + env(safe-area-inset-left));
+  background:#0d0d0d;
   border-bottom:2px solid var(--partmash-red);position:sticky;top:0;z-index:50}
+body{padding-bottom:env(safe-area-inset-bottom)}
 .efinav__home img{width:140px;height:auto;display:block}
 .efinav__links{display:flex;gap:.35rem;flex-wrap:wrap;flex:1 1 auto}
 .efinav__links a{color:var(--partmash-silver-light);text-decoration:none;font-size:.8rem;
