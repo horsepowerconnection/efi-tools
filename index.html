@@ -481,6 +481,15 @@ h1, h2, h3, h4, h5, h6,
   [class*="shiftcalc"] select:not([multiple]) {
     font-size: 16px;
   }
+
+  /* The site header's search box is the same defect: styles.css sets
+     `.site-header__search input{font-size:.9rem}`, so tapping search on an iPhone zoomed the
+     page. The `[type]` is there to beat that rule, which ties on a bare `input`. The second
+     selector covers the search RESULTS page, whose input carries no class at all. */
+  .site-header__search input[type],
+  form[role="search"] input[type="search"] {
+    font-size: 16px;
+  }
 }
 </style>
 <style>
